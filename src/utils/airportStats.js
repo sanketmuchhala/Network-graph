@@ -83,65 +83,65 @@ export const PASSENGER_DATA = {
   'CAK': { annual: 1.3, daily: 3600, peak: 'Jun-Aug' }
 };
 
-// Airline information with logo URLs from Wikimedia Commons (free, reliable CDN)
+// Airline information with reliable logo URLs and fallbacks
 export const AIRLINES = {
   'AA': {
     name: 'American Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2020/03/American-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/American_Airlines_logo_2013.svg/200px-American_Airlines_logo_2013.svg.png',
     color: '#0078D2',
     fullName: 'American Airlines'
   },
   'DL': {
     name: 'Delta Air Lines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2020/03/Delta-Air-Lines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Delta_logo_2014.svg/200px-Delta_logo_2014.svg.png',
     color: '#C8102E',
     fullName: 'Delta Air Lines'
   },
   'UA': {
     name: 'United Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2020/03/United-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/United_Airlines_logo_2010.svg/200px-United_Airlines_logo_2010.svg.png',
     color: '#0A3055',
     fullName: 'United Airlines'
   },
   'WN': {
     name: 'Southwest Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/Southwest-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Southwest_Airlines_logo_2014.svg/200px-Southwest_Airlines_logo_2014.svg.png',
     color: '#FFB612',
     fullName: 'Southwest Airlines'
   },
   'AS': {
     name: 'Alaska Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/Alaska-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Alaska_Airlines_logo_2016.svg/200px-Alaska_Airlines_logo_2016.svg.png',
     color: '#01426A',
     fullName: 'Alaska Airlines'
   },
   'B6': {
     name: 'JetBlue Airways',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/JetBlue-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/JetBlue_logo_2015.svg/200px-JetBlue_logo_2015.svg.png',
     color: '#0A3055',
     fullName: 'JetBlue Airways'
   },
   'NK': {
     name: 'Spirit Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/Spirit-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Spirit_Airlines_logo_2014.svg/200px-Spirit_Airlines_logo_2014.svg.png',
     color: '#FFE900',
     fullName: 'Spirit Airlines'
   },
   'F9': {
     name: 'Frontier Airlines',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2020/03/Frontier-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Frontier_Airlines_logo_2014.svg/200px-Frontier_Airlines_logo_2014.svg.png',
     color: '#00A651',
     fullName: 'Frontier Airlines'
   },
   'G4': {
     name: 'Allegiant Air',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/Allegiant-Air-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Allegiant_Air_logo_2014.svg/200px-Allegiant_Air_logo_2014.svg.png',
     color: '#0B2D6D',
     fullName: 'Allegiant Air'
   },
   'SY': {
     name: 'Sun Country',
-    logoUrl: 'https://logos-world.net/wp-content/uploads/2023/01/Sun-Country-Airlines-Logo.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Sun_Country_Airlines_logo_2014.svg/200px-Sun_Country_Airlines_logo_2014.svg.png',
     color: '#FFD100',
     fullName: 'Sun Country Airlines'
   }

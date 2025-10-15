@@ -29,6 +29,13 @@ import {
   getTimePeriodDescription,
   getHourlyStats
 } from './utils/airportStats';
+import {
+  calculateDistance
+} from './utils/routeCalculations';
+import {
+  calculateFlightDuration,
+  formatDuration
+} from './utils/flightDataAPI';
 import './App.css';
 
 function App() {
@@ -41,6 +48,7 @@ function App() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedAirport, setSelectedAirport] = useState(null);
   const [airportConnections, setAirportConnections] = useState(null);
+  const [selectedRoute, setSelectedRoute] = useState(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -196,7 +204,9 @@ function App() {
         code: targetCode,
         name: targetAirport?.name || 'Unknown',
         city: targetAirport?.city || 'Unknown',
-        state: targetAirport?.state || ''
+        state: targetAirport?.state || '',
+        lat: targetAirport?.lat || 0,
+        lon: targetAirport?.lon || 0
       };
     });
 
@@ -206,6 +216,7 @@ function App() {
     setSelectedAirport(airport);
     setAirportConnections(connectionDetails);
     setCurrentPath(null);
+    setSelectedRoute(null);
   };
 
   if (isLoading || !networkData || !graphMetrics) {
@@ -300,6 +311,7 @@ function App() {
             <button className="close-btn" onClick={() => handleAirportClick(null)} title="Close">✕</button>
           </div>
 
+          <div className="airport-sidebar-content">
           {/* Airport Statistics */}
           {PASSENGER_DATA[selectedAirport.code] && (() => {
             const stats = PASSENGER_DATA[selectedAirport.code];
@@ -413,17 +425,110 @@ function App() {
           </div>
 
           <div className="connections-list">
-            {airportConnections.map(conn => (
-              <div key={conn.code} className="connection-item">
-                <div className="connection-main">
-                  <span className="connection-code">{conn.code}</span>
-                  <span className="connection-city">{conn.city}, {conn.state}</span>
+            {airportConnections.map(conn => {
+              const isRouteSelected = selectedRoute &&
+                ((selectedRoute.source === selectedAirport.code && selectedRoute.target === conn.code) ||
+                (selectedRoute.target === selectedAirport.code && selectedRoute.source === conn.code));
+
+              return (
+                <div
+                  key={conn.code}
+                  className={`connection-item ${isRouteSelected ? 'selected' : ''}`}
+                  onClick={() => {
+                    // Calculate route details
+                    const distance = calculateDistance(
+                      selectedAirport.lat,
+                      selectedAirport.lon,
+                      conn.lat,
+                      conn.lon
+                    );
+
+                    // Calculate flight duration based on distance (more realistic than simple speed calculation)
+                    const flightDuration = calculateFlightDuration(distance);
+
+                    // Find all airlines operating this route
+                    const routesForThisPair = networkData.routes.filter(r =>
+                      (r.source === selectedAirport.code && r.target === conn.code) ||
+                      (r.source === conn.code && r.target === selectedAirport.code)
+                    );
+
+                    const airlinesOnRoute = [...new Set(routesForThisPair.map(r => r.airline))];
+
+                    setSelectedRoute({
+                      source: selectedAirport.code,
+                      target: conn.code,
+                      sourceAirport: selectedAirport,
+                      targetAirport: conn,
+                      distance,
+                      flightDuration,
+                      airlines: airlinesOnRoute
+                    });
+
+                    // Set the current path to highlight the route on the map
+                    setCurrentPath([selectedAirport.code, conn.code]);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="connection-main">
+                    <span className="connection-code">{conn.code}</span>
+                    <span className="connection-city">{conn.city}, {conn.state}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Route Details Section - Now integrated into the main sidebar */}
+          {selectedRoute && (
+            <div className="route-details-section">
+              <div className="route-details-header">
+                <h4>Route Details</h4>
+              </div>
+
+              <div className="route-endpoints">
+                <div className="route-endpoint">
+                  <div className="endpoint-code">{selectedRoute.source}</div>
+                  <div className="endpoint-name">{selectedRoute.sourceAirport.city}</div>
+                </div>
+                <div className="route-arrow">✈️</div>
+                <div className="route-endpoint">
+                  <div className="endpoint-code">{selectedRoute.target}</div>
+                  <div className="endpoint-name">{selectedRoute.targetAirport.city}</div>
                 </div>
               </div>
-            ))}
+
+              <div className="route-stats-grid">
+                <div className="route-stat-card">
+                  <div className="route-stat-icon">📏</div>
+                  <div className="route-stat-value">{selectedRoute.distance.toLocaleString()}</div>
+                  <div className="route-stat-label">Miles</div>
+                </div>
+                <div className="route-stat-card">
+                  <div className="route-stat-icon">⏱️</div>
+                  <div className="route-stat-value">
+                    {formatDuration(selectedRoute.flightDuration.hours, selectedRoute.flightDuration.minutes)}
+                  </div>
+                  <div className="route-stat-label">Flight Duration</div>
+                </div>
+              </div>
+
+
+              <div className="route-info-box">
+                <div className="route-info-label">Calculation Method</div>
+                <div className="route-info-value">
+                  Based on distance with variable cruise speeds (450-550 mph) plus taxi/climb/descend time
+                </div>
+              </div>
+
+              <div className="route-info-note">
+                💡 Flight times include realistic taxi, takeoff, climb, descend, and landing times
+              </div>
+            </div>
+          )}
           </div>
         </div>
       )}
+
 
       {infoTopic && (
         <InfoModal

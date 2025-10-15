@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { getCurvedPath } from '../utils/routeCalculations';
 
 const MapUpdater = ({ center, zoom }) => {
   const map = useMap();
@@ -128,13 +129,13 @@ const NetworkMap = ({
           opacity = 0.8;
         }
 
+        // Get curved path coordinates
+        const curvedPath = getCurvedPath(source.lat, source.lon, target.lat, target.lon);
+
         return (
           <Polyline
             key={`route-${idx}`}
-            positions={[
-              [source.lat, source.lon],
-              [target.lat, target.lon]
-            ]}
+            positions={curvedPath}
             pathOptions={{
               color: color,
               weight: weight,
@@ -153,13 +154,12 @@ const NetworkMap = ({
             const target = airportMap.get(highlightedPath[idx + 1]);
             if (!source || !target) return null;
 
+            const curvedPath = getCurvedPath(source.lat, source.lon, target.lat, target.lon);
+
             return (
               <Polyline
                 key={`path-${idx}`}
-                positions={[
-                  [source.lat, source.lon],
-                  [target.lat, target.lon]
-                ]}
+                positions={curvedPath}
                 pathOptions={{
                   color: pathColor,
                   weight: 4,
