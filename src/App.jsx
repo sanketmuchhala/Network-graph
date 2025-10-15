@@ -4,6 +4,7 @@ import StatsPanel from './components/StatsPanel';
 import PathFinder from './components/PathFinder';
 import HubDisruptor from './components/HubDisruptor';
 import InfoModal from './components/InfoModal';
+import AIInsights from './components/AIInsights';
 import { generateNetworkData } from './utils/dataGenerator';
 import {
   buildGraph,
@@ -14,12 +15,23 @@ import {
   calculateDegreeCentrality,
   calculateClusteringCoefficient,
   simulateHubDisruption,
-  getTopHubs
+  getTopHubs,
+  detectCommunities,
+  calculateBetweennessCentrality,
+  predictRoutes,
+  predictTrafficLoad,
+  findStrategicHubs
 } from './utils/graphAlgorithms';
+import {
+  PASSENGER_DATA,
+  AIRLINES,
+  getBusynessLevel,
+  getTimePeriodDescription,
+  getHourlyStats
+} from './utils/airportStats';
 import './App.css';
 
 function App() {
-  const [theme, setTheme] = useState('dark');
   const [networkData, setNetworkData] = useState(null);
   const [currentPath, setCurrentPath] = useState(null);
   const [removedHub, setRemovedHub] = useState(null);
@@ -29,10 +41,6 @@ function App() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedAirport, setSelectedAirport] = useState(null);
   const [airportConnections, setAirportConnections] = useState(null);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -85,6 +93,27 @@ function App() {
 
     const topHubs = getTopHubs(degreeCentrality, 20);
 
+    // AI/ML Features
+    console.time('Community Detection');
+    const communities = detectCommunities(graph);
+    console.timeEnd('Community Detection');
+
+    console.time('Betweenness Centrality');
+    const betweenness = calculateBetweennessCentrality(graph, 30);
+    console.timeEnd('Betweenness Centrality');
+
+    console.time('Route Predictions');
+    const predictedRoutes = predictRoutes(graph, networkData.airports, 10);
+    console.timeEnd('Route Predictions');
+
+    console.time('Traffic Predictions');
+    const trafficLoad = predictTrafficLoad(graph, betweenness, degreeCentrality);
+    console.timeEnd('Traffic Predictions');
+
+    console.time('Strategic Hubs');
+    const strategicHubs = findStrategicHubs(betweenness, degreeCentrality, 5);
+    console.timeEnd('Strategic Hubs');
+
     console.timeEnd('Graph Metrics Calculation');
     console.log('Graph metrics computed!');
 
@@ -95,7 +124,12 @@ function App() {
       pathDistribution,
       degreeCentrality,
       clusteringCoefficient,
-      topHubs
+      topHubs,
+      communities,
+      betweenness,
+      predictedRoutes,
+      trafficLoad,
+      strategicHubs
     };
   }, [networkData]);
 
@@ -137,10 +171,6 @@ function App() {
 
   const handleShowInfo = (topic) => {
     setInfoTopic(topic);
-  };
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   const handleAirportClick = (airport) => {
@@ -203,9 +233,6 @@ function App() {
           >
             Heatmap
           </button>
-          <button className="icon-btn" onClick={toggleTheme} title="Toggle Theme">
-            {theme === 'dark' ? 'Light' : 'Dark'}
-          </button>
         </div>
       </header>
 
@@ -218,12 +245,13 @@ function App() {
             highlightedPath={currentPath}
             removedHub={removedHub}
             degreeCentrality={graphMetrics.degreeCentrality}
-            theme={theme}
             mapCenter={networkData.center}
             mapZoom={4}
             showHeatmap={showHeatmap}
             onAirportClick={handleAirportClick}
             selectedAirport={selectedAirport}
+            communities={graphMetrics.communities}
+            trafficLoad={graphMetrics.trafficLoad}
           />
         </div>
 
@@ -234,6 +262,13 @@ function App() {
             currentPath={currentPath}
           />
 
+          <HubDisruptor
+            topHubs={graphMetrics.topHubs}
+            airports={networkData.airports}
+            onDisruptHub={handleDisruptHub}
+            disruptionResult={disruptionResult}
+          />
+
           <StatsPanel
             avgDegreesOfSeparation={graphMetrics.avgDegrees}
             topHubs={graphMetrics.topHubs}
@@ -241,11 +276,15 @@ function App() {
             onShowInfo={handleShowInfo}
           />
 
-          <HubDisruptor
-            topHubs={graphMetrics.topHubs}
+          <AIInsights
+            communities={graphMetrics.communities}
+            predictedRoutes={graphMetrics.predictedRoutes}
+            strategicHubs={graphMetrics.strategicHubs}
+            trafficLoad={graphMetrics.trafficLoad}
             airports={networkData.airports}
-            onDisruptHub={handleDisruptHub}
-            disruptionResult={disruptionResult}
+            betweenness={graphMetrics.betweenness}
+            degreeCentrality={graphMetrics.degreeCentrality}
+            onShowInfo={handleShowInfo}
           />
         </div>
       </div>
@@ -261,8 +300,110 @@ function App() {
             <button className="close-btn" onClick={() => handleAirportClick(null)} title="Close">✕</button>
           </div>
 
+          {/* Airport Statistics */}
+          {PASSENGER_DATA[selectedAirport.code] && (() => {
+            const stats = PASSENGER_DATA[selectedAirport.code];
+            const busyness = getBusynessLevel(stats.annual);
+            const hourlyStats = getHourlyStats(stats.daily);
+            const trafficData = graphMetrics.trafficLoad?.get(selectedAirport.code);
+
+            return (
+              <div className="airport-stats-section">
+                <h4 className="stats-section-title">Airport Statistics</h4>
+
+                {/* Busyness Indicator */}
+                <div className="busyness-indicator">
+                  <div className="busyness-label">Activity Level</div>
+                  <div className="busyness-bar-container">
+                    <div
+                      className="busyness-bar"
+                      style={{
+                        width: `${busyness.intensity}%`,
+                        background: `linear-gradient(90deg, ${busyness.color}, ${busyness.color}dd)`
+                      }}
+                    />
+                  </div>
+                  <div className="busyness-level" style={{ color: busyness.color }}>
+                    {busyness.level}
+                  </div>
+                </div>
+
+                {/* Passenger Stats Grid */}
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <div className="stat-icon">✈️</div>
+                    <div className="stat-value">{stats.annual.toFixed(1)}M</div>
+                    <div className="stat-label">Annual Passengers</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-icon">📅</div>
+                    <div className="stat-value">{(stats.daily / 1000).toFixed(0)}K</div>
+                    <div className="stat-label">Daily Average</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-icon">⏰</div>
+                    <div className="stat-value">{hourlyStats.averagePerHour.toLocaleString()}</div>
+                    <div className="stat-label">Avg Per Hour</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-icon">🔥</div>
+                    <div className="stat-value">{hourlyStats.peakHourEstimate.toLocaleString()}</div>
+                    <div className="stat-label">Peak Hour</div>
+                  </div>
+                </div>
+
+                {/* Peak Season */}
+                <div className="peak-season-info">
+                  <div className="peak-season-label">Peak Travel Season</div>
+                  <div className="peak-season-value">{getTimePeriodDescription(stats.peak)}</div>
+                </div>
+
+                {/* Main Airlines */}
+                {stats.mainAirlines && stats.mainAirlines.length > 0 && (
+                  <div className="main-airlines-section">
+                    <div className="airlines-label">Major Hub Airlines</div>
+                    <div className="airlines-list">
+                      {stats.mainAirlines.map(airlineCode => {
+                        const airline = AIRLINES[airlineCode];
+                        if (!airline) return null;
+                        return (
+                          <div key={airlineCode} className="airline-badge" style={{ borderColor: airline.color }}>
+                            <img
+                              src={airline.logoUrl}
+                              alt={airline.name}
+                              className="airline-logo-img"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'inline';
+                              }}
+                            />
+                            <span className="airline-logo-fallback" style={{ display: 'none' }}>✈️</span>
+                            <span className="airline-name">{airline.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Network Congestion Prediction */}
+                {trafficData && (
+                  <div className="traffic-prediction-box">
+                    <div className="traffic-prediction-label">Predicted Congestion</div>
+                    <div className={`traffic-prediction-badge ${trafficData.level}`}>
+                      {trafficData.level.toUpperCase()}
+                    </div>
+                    <div className="traffic-prediction-score">
+                      Network Load: {(trafficData.score * 100).toFixed(0)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="connectivity-score">
-            <div className="score-label">Connectivity Score</div>
+            <div className="score-label">Network Connectivity</div>
             <div className="score-value">{airportConnections.length}</div>
             <div className="score-subtitle">Direct Connections</div>
           </div>

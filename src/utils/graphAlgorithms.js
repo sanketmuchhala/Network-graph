@@ -286,3 +286,278 @@ export function findConnectedComponents(graph) {
 
   return components;
 }
+
+// Community Detection using Louvain-like algorithm (simplified greedy modularity optimization)
+export function detectCommunities(graph) {
+  const nodes = Array.from(graph.keys());
+  const communities = new Map();
+
+  // Initialize: each node in its own community
+  nodes.forEach((node, idx) => {
+    communities.set(node, idx);
+  });
+
+  let totalEdges = 0;
+  nodes.forEach(node => {
+    totalEdges += graph.get(node).length;
+  });
+  totalEdges /= 2; // Each edge counted twice
+
+  let improved = true;
+  let iterations = 0;
+  const maxIterations = 10;
+
+  while (improved && iterations < maxIterations) {
+    improved = false;
+    iterations++;
+
+    // For each node, try moving to neighbor's community if it improves modularity
+    for (const node of nodes) {
+      const currentCommunity = communities.get(node);
+      const neighbors = graph.get(node) || [];
+
+      // Count connections to each neighboring community
+      const communityConnections = new Map();
+      neighbors.forEach(({ node: neighbor }) => {
+        const neighborCommunity = communities.get(neighbor);
+        communityConnections.set(
+          neighborCommunity,
+          (communityConnections.get(neighborCommunity) || 0) + 1
+        );
+      });
+
+      // Find best community (most connections)
+      let bestCommunity = currentCommunity;
+      let maxConnections = communityConnections.get(currentCommunity) || 0;
+
+      for (const [community, connections] of communityConnections) {
+        if (connections > maxConnections) {
+          maxConnections = connections;
+          bestCommunity = community;
+        }
+      }
+
+      // Move to best community if different
+      if (bestCommunity !== currentCommunity) {
+        communities.set(node, bestCommunity);
+        improved = true;
+      }
+    }
+  }
+
+  // Renumber communities to be sequential
+  const uniqueCommunities = new Set(communities.values());
+  const communityMap = new Map();
+  let communityId = 0;
+  uniqueCommunities.forEach(oldId => {
+    communityMap.set(oldId, communityId++);
+  });
+
+  const finalCommunities = new Map();
+  communities.forEach((oldId, node) => {
+    finalCommunities.set(node, communityMap.get(oldId));
+  });
+
+  return finalCommunities;
+}
+
+// Calculate betweenness centrality (simplified - sample based for performance)
+export function calculateBetweennessCentrality(graph, sampleSize = 30) {
+  const betweenness = new Map();
+  const nodes = Array.from(graph.keys());
+
+  // Initialize all nodes with 0
+  nodes.forEach(node => {
+    betweenness.set(node, 0);
+  });
+
+  // Sample random source nodes for performance
+  const sampleNodes = nodes
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.min(sampleSize, nodes.length));
+
+  // For each sampled source, find shortest paths to all targets
+  sampleNodes.forEach(source => {
+    const stack = [];
+    const paths = new Map();
+    const distance = new Map();
+    const sigma = new Map();
+
+    nodes.forEach(node => {
+      paths.set(node, []);
+      distance.set(node, -1);
+      sigma.set(node, 0);
+    });
+
+    distance.set(source, 0);
+    sigma.set(source, 1);
+
+    const queue = [source];
+
+    while (queue.length > 0) {
+      const node = queue.shift();
+      stack.push(node);
+
+      const neighbors = graph.get(node) || [];
+      neighbors.forEach(({ node: neighbor }) => {
+        if (distance.get(neighbor) < 0) {
+          queue.push(neighbor);
+          distance.set(neighbor, distance.get(node) + 1);
+        }
+
+        if (distance.get(neighbor) === distance.get(node) + 1) {
+          sigma.set(neighbor, sigma.get(neighbor) + sigma.get(node));
+          paths.get(neighbor).push(node);
+        }
+      });
+    }
+
+    // Accumulation
+    const delta = new Map();
+    nodes.forEach(node => delta.set(node, 0));
+
+    while (stack.length > 0) {
+      const w = stack.pop();
+      const predecessors = paths.get(w);
+
+      predecessors.forEach(v => {
+        delta.set(v, delta.get(v) + (sigma.get(v) / sigma.get(w)) * (1 + delta.get(w)));
+      });
+
+      if (w !== source) {
+        betweenness.set(w, betweenness.get(w) + delta.get(w));
+      }
+    }
+  });
+
+  // Normalize by sample size
+  betweenness.forEach((value, node) => {
+    betweenness.set(node, value / sampleSize);
+  });
+
+  return betweenness;
+}
+
+// Predict potential new routes based on network patterns
+export function predictRoutes(graph, airports, topN = 10) {
+  const predictions = [];
+  const existingRoutes = new Set();
+
+  // Build set of existing routes
+  graph.forEach((neighbors, source) => {
+    neighbors.forEach(({ node: target }) => {
+      const routeKey = [source, target].sort().join('-');
+      existingRoutes.add(routeKey);
+    });
+  });
+
+  const airportArray = Array.from(graph.keys());
+
+  // For each pair of unconnected airports, calculate connection score
+  for (let i = 0; i < airportArray.length; i++) {
+    for (let j = i + 1; j < airportArray.length; j++) {
+      const source = airportArray[i];
+      const target = airportArray[j];
+      const routeKey = [source, target].sort().join('-');
+
+      if (!existingRoutes.has(routeKey)) {
+        const sourceNeighbors = new Set((graph.get(source) || []).map(n => n.node));
+        const targetNeighbors = new Set((graph.get(target) || []).map(n => n.node));
+
+        // Common neighbors (Jaccard coefficient)
+        let commonNeighbors = 0;
+        sourceNeighbors.forEach(neighbor => {
+          if (targetNeighbors.has(neighbor)) commonNeighbors++;
+        });
+
+        // Preferential attachment score
+        const paScore = sourceNeighbors.size * targetNeighbors.size;
+
+        // Combined score
+        const score = commonNeighbors * 10 + Math.log(paScore + 1);
+
+        if (score > 0) {
+          const sourceAirport = airports.find(a => a.code === source);
+          const targetAirport = airports.find(a => a.code === target);
+
+          predictions.push({
+            source,
+            target,
+            sourceCity: sourceAirport?.city || source,
+            targetCity: targetAirport?.city || target,
+            score: score,
+            commonNeighbors
+          });
+        }
+      }
+    }
+  }
+
+  return predictions
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topN);
+}
+
+// Traffic prediction heatmap (simulate congestion based on betweenness and degree)
+export function predictTrafficLoad(graph, betweenness, centrality) {
+  const trafficScores = new Map();
+  const nodes = Array.from(graph.keys());
+
+  // Normalize betweenness and centrality
+  const maxBetweenness = Math.max(...Array.from(betweenness.values()));
+  const maxCentrality = Math.max(...Array.from(centrality.values()));
+
+  nodes.forEach(node => {
+    const normalizedBetweenness = (betweenness.get(node) || 0) / (maxBetweenness || 1);
+    const normalizedCentrality = (centrality.get(node) || 0) / (maxCentrality || 1);
+
+    // Traffic score: weighted combination of betweenness (60%) and degree (40%)
+    const trafficScore = normalizedBetweenness * 0.6 + normalizedCentrality * 0.4;
+
+    let congestionLevel = 'low';
+    if (trafficScore > 0.7) congestionLevel = 'critical';
+    else if (trafficScore > 0.5) congestionLevel = 'high';
+    else if (trafficScore > 0.3) congestionLevel = 'medium';
+
+    trafficScores.set(node, {
+      score: trafficScore,
+      level: congestionLevel,
+      betweennessContribution: normalizedBetweenness,
+      degreeContribution: normalizedCentrality
+    });
+  });
+
+  return trafficScores;
+}
+
+// Find underutilized strategic hubs (high betweenness, low degree)
+export function findStrategicHubs(betweenness, centrality, topN = 5) {
+  const nodes = Array.from(betweenness.keys());
+  const strategicScores = [];
+
+  const maxBetweenness = Math.max(...Array.from(betweenness.values()));
+  const maxCentrality = Math.max(...Array.from(centrality.values()));
+
+  nodes.forEach(node => {
+    const normalizedBetweenness = (betweenness.get(node) || 0) / (maxBetweenness || 1);
+    const normalizedCentrality = (centrality.get(node) || 0) / (maxCentrality || 1);
+
+    // Strategic score: high betweenness but low degree (underutilized)
+    // Only consider if betweenness > 0.2 and degree < 0.5 (medium connectivity)
+    if (normalizedBetweenness > 0.2 && normalizedCentrality < 0.5) {
+      const strategicScore = normalizedBetweenness / (normalizedCentrality + 0.1);
+
+      strategicScores.push({
+        code: node,
+        strategicScore,
+        betweenness: betweenness.get(node),
+        degree: centrality.get(node),
+        potential: 'High - Critical bridge point with room for growth'
+      });
+    }
+  });
+
+  return strategicScores
+    .sort((a, b) => b.strategicScore - a.strategicScore)
+    .slice(0, topN);
+}

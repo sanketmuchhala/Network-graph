@@ -2,19 +2,7 @@
 
 /* Apple-Inspired Minimal Design */
 
-:root[data-theme="dark"] {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2d2d2d;
-  --bg-elevated: #3a3a3a;
-  --text-primary: #ffffff;
-  --text-secondary: #a0a0a0;
-  --border-color: #404040;
-  --accent: #0969da;
-  --accent-hover: #0550ae;
-  --map-bg: #1a1a1a;
-}
-
-:root[data-theme="light"] {
+:root {
   --bg-primary: #ffffff;
   --bg-secondary: #f6f8fa;
   --bg-elevated: #ffffff;
@@ -176,37 +164,14 @@ body {
   color: inherit !important;
 }
 
-/* Dark mode specific - Force white text */
-:root[data-theme="dark"] .leaflet-tooltip {
-  color: #ffffff !important;
-}
-
-:root[data-theme="dark"] .leaflet-tooltip * {
-  color: inherit !important;
-}
-
-:root[data-theme="dark"] .leaflet-tooltip div {
-  color: inherit !important;
-}
-
-:root[data-theme="dark"] .leaflet-tooltip span {
-  color: inherit !important;
-}
-
-/* Light mode specific - Force dark text */
-:root[data-theme="light"] .leaflet-tooltip {
+/* Tooltip styling - Light mode only */
+.leaflet-tooltip {
   color: #1f2328 !important;
 }
 
-:root[data-theme="light"] .leaflet-tooltip * {
-  color: inherit !important;
-}
-
-:root[data-theme="light"] .leaflet-tooltip div {
-  color: inherit !important;
-}
-
-:root[data-theme="light"] .leaflet-tooltip span {
+.leaflet-tooltip *,
+.leaflet-tooltip div,
+.leaflet-tooltip span {
   color: inherit !important;
 }
 
@@ -814,4 +779,444 @@ body {
     margin: 1rem;
     width: calc(100% - 2rem);
   }
+}
+
+/* AI Insights Panel */
+.ai-insights {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.ai-insights h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.insight-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.insight-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.insight-section h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+  letter-spacing: -0.2px;
+}
+
+.insight-content {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.insight-summary {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.insight-summary strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.insight-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.insight-detail .label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.insight-detail .value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.strategic-list,
+.route-predictions,
+.traffic-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strategic-list li,
+.traffic-list li {
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+}
+
+.strategic-list li strong,
+.traffic-list li strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.hub-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.route-predictions li {
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.route-pair {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.route-cities {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.route-score {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.traffic-badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.traffic-badge.critical {
+  background: #ff4444;
+  color: white;
+}
+
+.traffic-badge.high {
+  background: #ffb020;
+  color: #1a1a1a;
+}
+
+.traffic-badge.medium {
+  background: #ffd54f;
+  color: #1a1a1a;
+}
+
+.traffic-badge.low {
+  background: #81c784;
+  color: #1a1a1a;
+}
+
+.insight-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.clickable-insight {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-insight:hover {
+  background: var(--bg-primary) !important;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-insight:active {
+  transform: translateX(2px);
+}
+
+.modal-content-wide {
+  max-width: 700px !important;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-markdown {
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.modal-markdown h3 {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.modal-markdown strong {
+  color: var(--accent);
+}
+
+.modal-markdown code {
+  background: var(--bg-secondary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875em;
+}
+
+/* Airport Statistics Section */
+.airport-stats-section {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.stats-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.busyness-indicator {
+  margin-bottom: 1.25rem;
+}
+
+.busyness-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.busyness-bar-container {
+  width: 100%;
+  height: 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.busyness-bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+.busyness-level {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 0.875rem;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.peak-season-info {
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.peak-season-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+.peak-season-value {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.main-airlines-section {
+  margin-bottom: 1.25rem;
+}
+
+.airlines-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.airlines-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.airline-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-secondary);
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  transition: all 0.2s ease;
+}
+
+.airline-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.airline-logo-img {
+  height: 24px;
+  width: auto;
+  max-width: 40px;
+  object-fit: contain;
+}
+
+.airline-logo-fallback {
+  font-size: 1.25rem;
+}
+
+.airline-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.traffic-prediction-box {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-elevated));
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.traffic-prediction-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.traffic-prediction-badge {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.traffic-prediction-badge.critical {
+  background: #ff4444;
+  color: white;
+}
+
+.traffic-prediction-badge.high {
+  background: #ffb020;
+  color: #1a1a1a;
+}
+
+.traffic-prediction-badge.medium {
+  background: #ffd54f;
+  color: #1a1a1a;
+}
+
+.traffic-prediction-badge.low {
+  background: #81c784;
+  color: #1a1a1a;
+}
+
+.traffic-prediction-score {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }

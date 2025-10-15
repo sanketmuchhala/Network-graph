@@ -20,12 +20,13 @@ const NetworkMap = ({
   highlightedPath,
   removedHub,
   degreeCentrality,
-  theme,
   mapCenter,
   mapZoom,
   showHeatmap,
   onAirportClick,
-  selectedAirport
+  selectedAirport,
+  communities,
+  trafficLoad
 }) => {
   console.log('NetworkMap rendering:', airports?.length, 'airports', routes?.length, 'routes', 'center:', mapCenter);
 
@@ -50,18 +51,47 @@ const NetworkMap = ({
   const airportMap = new Map((airports || []).map(a => [a.code, a]));
   const maxDegree = Math.max(...Array.from(degreeCentrality?.values() || [1]));
 
-  // Optimized color palettes for light and dark modes
-  const routeColor = theme === 'dark' ? 'rgba(100, 200, 255, 0.3)' : 'rgba(50, 100, 200, 0.25)';
-  const selectedRouteColor = theme === 'dark' ? '#FFB020' : '#FF6B35';
-  const hubColor = theme === 'dark' ? '#FF4444' : '#E63946';
-  const nodeColor = theme === 'dark' ? '#00D9FF' : '#0066CC';
-  const pathColor = theme === 'dark' ? '#00FF88' : '#00CC66';
+  // Community colors (vibrant palette for better visibility)
+  const communityColors = [
+    '#E91E63',  // Pink
+    '#2196F3',  // Blue
+    '#4CAF50',  // Green
+    '#FFC107',  // Amber
+    '#9C27B0',  // Purple
+    '#FF5722',  // Deep Orange
+    '#00BCD4',  // Cyan
+    '#CDDC39',  // Lime
+  ];
 
-  // Tile layer - dark background for dark mode, light for light mode
-  const tileLayerUrl = theme === 'dark'
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  // Get community color for an airport
+  const getCommunityColor = (airportCode) => {
+    if (!communities) return null;
+    const communityId = communities.get(airportCode);
+    if (communityId === undefined) return null;
+    return communityColors[communityId % communityColors.length];
+  };
 
+  // Get traffic color for heatmap
+  const getTrafficColor = (airportCode) => {
+    if (!trafficLoad) return null;
+    const traffic = trafficLoad.get(airportCode);
+    if (!traffic) return null;
+
+    if (traffic.level === 'critical') return '#E63946';
+    if (traffic.level === 'high') return '#FF8C00';
+    if (traffic.level === 'medium') return '#FFC107';
+    return '#4CAF50';
+  };
+
+  // Color palette (light mode only)
+  const routeColor = 'rgba(50, 100, 200, 0.25)';
+  const selectedRouteColor = '#FF6B35';
+  const hubColor = '#E63946';
+  const nodeColor = '#0066CC';
+  const pathColor = '#00CC66';
+
+  // Tile layer
+  const tileLayerUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const tileLayerAttribution = '&copy; OpenStreetMap contributors';
 
   return (
@@ -153,12 +183,25 @@ const NetworkMap = ({
         const isHub = degree > 50;
         const isSelected = selectedAirport && airport.code === selectedAirport.code;
 
-        let color = isHub ? hubColor : nodeColor;
+        // Determine color based on mode
+        let color;
+        if (isSelected) {
+          color = selectedRouteColor;
+        } else if (showHeatmap && trafficLoad) {
+          // Heatmap mode: use traffic predictions
+          color = getTrafficColor(airport.code) || (isHub ? hubColor : nodeColor);
+        } else if (communities && !showHeatmap) {
+          // Normal mode: use community colors
+          color = getCommunityColor(airport.code) || nodeColor;
+        } else {
+          // Fallback: use hub/node colors
+          color = isHub ? hubColor : nodeColor;
+        }
+
         let opacity = showHeatmap ? Math.max(0.3, (degree / maxDegree)) : 0.7;
         let weight = 2;
 
         if (isSelected) {
-          color = selectedRouteColor;
           opacity = 1;
           weight = 3;
         }
@@ -188,40 +231,40 @@ const NetworkMap = ({
               offset={[0, -10]}
               opacity={1}
               permanent={false}
-              className={theme === 'dark' ? 'airport-tooltip-dark' : 'airport-tooltip-light'}
+              className="airport-tooltip-light"
             >
               <div style={{
                 fontSize: '13px',
-                padding: '8px 12px',
-                backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
-                border: `2px solid ${theme === 'dark' ? '#0969da' : '#0969da'}`,
+                padding: '10px 14px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #0969da',
                 borderRadius: '8px',
-                color: theme === 'dark' ? '#ffffff !important' : '#1f2328 !important',
+                color: '#1f2328',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 textTransform: 'none',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif'
               }}>
                 <div style={{
-                  fontWeight: 600,
+                  fontWeight: 700,
                   marginBottom: '4px',
-                  color: theme === 'dark' ? '#ffffff !important' : '#1f2328 !important',
-                  textTransform: 'none'
+                  color: '#1f2328',
+                  textTransform: 'none',
+                  fontSize: '14px'
                 }}>
                   {airport.code.toUpperCase()} - {airport.city}, {airport.state || 'US'}
                 </div>
                 <div style={{
                   fontSize: '12px',
-                  opacity: 0.8,
                   marginBottom: '2px',
-                  color: theme === 'dark' ? '#e6e6e6 !important' : '#636c76 !important',
+                  color: '#636c76',
                   textTransform: 'none'
                 }}>
                   {airport.name}
                 </div>
                 <div style={{
                   fontSize: '12px',
-                  fontWeight: 500,
-                  color: theme === 'dark' ? '#00D9FF !important' : '#0969da !important',
+                  fontWeight: 600,
+                  color: '#0969da',
                   textTransform: 'none'
                 }}>
                   {degree} connections
