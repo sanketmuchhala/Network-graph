@@ -93,8 +93,10 @@ body {
   justify-content: space-between;
   padding: 0 1.5rem;
   height: 52px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-base);
+  background: rgba(7, 11, 24, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   position: relative;
   z-index: 500;
   flex-shrink: 0;
@@ -175,42 +177,36 @@ body {
   box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
 }
 
-/* ── LAYOUT ──────────────────────────────────────────────── */
+/* ── LAYOUT — globe fills viewport, sidebar floats ──────── */
 .app-layout-new {
-  display: flex;
+  position: relative;
   flex: 1;
   overflow: hidden;
   height: calc(100vh - 52px);
 }
 
 .map-container-large {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Vignette over the map edges */
-.map-container-large::after {
-  content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(4, 6, 15, 0.5) 100%);
-  pointer-events: none;
-  z-index: 400;
+  z-index: 0;
 }
 
-/* ── SIDEBAR ─────────────────────────────────────────────── */
+/* ── SIDEBAR — floating glass panel ─────────────────────── */
 .controls-sidebar {
-  width: 360px;
-  min-width: 360px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 348px;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: var(--bg-surface);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 22px 22px;
-  border-left: 1px solid var(--border-base);
+  background: rgba(7, 11, 24, 0.88);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   flex-direction: column;
+  z-index: 100;
 }
 
 /* ── LEAFLET OVERRIDES ───────────────────────────────────── */
@@ -1023,14 +1019,14 @@ select option {
   top: 52px;
   width: 380px;
   height: calc(100vh - 52px);
-  background-color: var(--bg-surface);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border-left: 1px solid var(--border-base);
+  background: rgba(7, 11, 24, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.75);
-  z-index: 1001;
+  box-shadow: -16px 0 60px rgba(0, 0, 0, 0.8);
+  z-index: 300;
   animation: slideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -2060,16 +2056,30 @@ select option {
 /* ── GLOBE HINT ──────────────────────────────────────────── */
 .globe-hint {
   position: absolute;
-  bottom: 1.25rem;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.5625rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   color: var(--text-muted);
   pointer-events: none;
-  animation: fadeIn 1s ease 2s both;
+  animation: fadeIn 1s ease 2.5s both;
+  white-space: nowrap;
+}
+
+.globe-hint-sep {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
 }
 
 /* ── AIRLINE BADGE (redesigned) ──────────────────────────── */
