@@ -1,83 +1,144 @@
 @import 'leaflet/dist/leaflet.css';
 
-/* Apple-Inspired Minimal Design */
+/* ═══════════════════════════════════════════════════════════
+   AIRNET — DARK AEROSPACE MISSION CONTROL
+   US Airport Network Visualization
+   ═══════════════════════════════════════════════════════════ */
 
+/* ── VARIABLES ───────────────────────────────────────────── */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f6f8fa;
-  --bg-elevated: #ffffff;
-  --text-primary: #1f2328;
-  --text-secondary: #636c76;
-  --border-color: #d0d7de;
-  --accent: #0969da;
-  --accent-hover: #0550ae;
-  --map-bg: #f6f8fa;
+  /* Core backgrounds — deepest to most elevated */
+  --bg-void:    #04060f;
+  --bg-base:    #070b18;
+  --bg-surface: #0b1020;
+  --bg-raised:  #0f1728;
+  --bg-card:    #131e32;
+
+  /* Compatibility aliases for existing component classes */
+  --bg-primary:   var(--bg-base);
+  --bg-secondary: var(--bg-surface);
+  --bg-elevated:  var(--bg-raised);
+
+  /* Accent — Amber (primary, aviation instrument gold) */
+  --amber:        #f59e0b;
+  --amber-light:  #fbbf24;
+  --amber-dim:    rgba(245, 158, 11, 0.10);
+  --amber-border: rgba(245, 158, 11, 0.28);
+
+  /* Accent — Cyan (data highlight, radar screens) */
+  --cyan:        #22d3ee;
+  --cyan-light:  #67e8f9;
+  --cyan-dim:    rgba(34, 211, 238, 0.08);
+  --cyan-border: rgba(34, 211, 238, 0.22);
+
+  /* Accent — Crimson (alerts, disruptions) */
+  --crimson:     #f43f5e;
+  --crimson-dim: rgba(244, 63, 94, 0.10);
+
+  /* Accent — Emerald (paths, success) */
+  --emerald:     #10b981;
+  --emerald-dim: rgba(16, 185, 129, 0.10);
+
+  /* Accent — Violet (AI insights) */
+  --violet:     #a78bfa;
+  --violet-dim: rgba(167, 139, 250, 0.10);
+
+  /* Legacy accent alias */
+  --accent:       var(--cyan);
+  --accent-hover: var(--cyan-light);
+
+  /* Text hierarchy */
+  --text-primary:   #dde6f6;
+  --text-secondary: #7a90b8;
+  --text-muted:     #3d506e;
+
+  /* Borders */
+  --border-color:  rgba(255, 255, 255, 0.07);
+  --border-base:   rgba(255, 255, 255, 0.07);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+
+  /* Map */
+  --map-bg: var(--bg-base);
 }
 
-* {
+/* ── RESET ───────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ── BASE ────────────────────────────────────────────────── */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-  background: var(--bg-primary);
+  font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-void);
   color: var(--text-primary);
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── APP SHELL ───────────────────────────────────────────── */
 .app {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-void);
 }
 
-/* Header - Minimal Apple Style */
+/* ── HEADER ──────────────────────────────────────────────── */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  padding: 0 1.5rem;
+  height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-base);
+  position: relative;
+  z-index: 500;
+  flex-shrink: 0;
+}
+
+/* Gradient line beneath header */
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--amber) 30%, var(--cyan) 70%, transparent 100%);
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .app-header h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-}
-
-.header-controls-center {
-  display: flex;
-  gap: 0.5rem;
-  background: var(--bg-elevated);
-  padding: 0.25rem;
-  border-radius: 8px;
-}
-
-.country-btn {
-  padding: 0.5rem 1.25rem;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
 }
 
-.country-btn.active {
-  background: var(--accent);
-  color: white;
+.app-header h1::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald);
+  animation: status-pulse 2.5s ease-in-out infinite;
 }
 
-.country-btn:hover:not(.active) {
-  color: var(--text-primary);
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--emerald); }
+  50% { opacity: 0.4; box-shadow: 0 0 4px var(--emerald); }
 }
 
 .header-right {
@@ -85,70 +146,89 @@ body {
   gap: 0.5rem;
 }
 
+/* ── ICON BUTTON ─────────────────────────────────────────── */
 .icon-btn {
-  padding: 0.5rem 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  padding: 0.375rem 0.875rem;
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: 5px;
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
 }
 
 .icon-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--accent);
+  border-color: var(--amber-border);
+  color: var(--amber);
+  background: var(--amber-dim);
 }
 
 .icon-btn.active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
+  background: var(--amber-dim);
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
 }
 
-/* Layout - MAP DOMINATES */
+/* ── LAYOUT ──────────────────────────────────────────────── */
 .app-layout-new {
   display: flex;
-  height: calc(100vh - 60px);
+  flex: 1;
   overflow: hidden;
+  height: calc(100vh - 52px);
 }
 
 .map-container-large {
   flex: 1;
   position: relative;
-  background: var(--bg-primary);
+  overflow: hidden;
 }
 
+/* Vignette over the map edges */
+.map-container-large::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(4, 6, 15, 0.5) 100%);
+  pointer-events: none;
+  z-index: 400;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
 .controls-sidebar {
-  width: 340px;
+  width: 360px;
+  min-width: 360px;
   overflow-y: auto;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
+  overflow-x: hidden;
+  background-color: var(--bg-surface);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 22px 22px;
+  border-left: 1px solid var(--border-base);
+  display: flex;
+  flex-direction: column;
 }
 
-/* Leaflet Map */
+/* ── LEAFLET OVERRIDES ───────────────────────────────────── */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background: var(--bg-primary);
+  background: var(--bg-base);
 }
 
-/* Leaflet Tooltip Overrides for Both Modes */
 .leaflet-tooltip {
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  margin: 0 !important;
   color: inherit !important;
 }
 
-.leaflet-tooltip::before {
-  display: none !important;
-}
-
+.leaflet-tooltip::before,
 .leaflet-tooltip-top::before,
 .leaflet-tooltip-bottom::before,
 .leaflet-tooltip-left::before,
@@ -156,288 +236,874 @@ body {
   display: none !important;
 }
 
-/* Ensure tooltip content takes our custom styles */
-.leaflet-tooltip .leaflet-tooltip-content {
-  margin: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  color: inherit !important;
-}
-
-/* Tooltip styling - Light mode only */
-.leaflet-tooltip {
-  color: #1f2328 !important;
-}
-
-.leaflet-tooltip *,
-.leaflet-tooltip div,
-.leaflet-tooltip span {
-  color: inherit !important;
-}
-
-/* Force text transform to none for all tooltips */
 .leaflet-tooltip,
 .leaflet-tooltip * {
   text-transform: none !important;
 }
 
-/* Panels - Clean & Minimal */
+/* Dark zoom controls */
+.leaflet-control-zoom {
+  border: 1px solid var(--border-base) !important;
+  border-radius: 6px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg-raised) !important;
+  border-color: var(--border-base) !important;
+  color: var(--text-secondary) !important;
+  font-size: 1.125rem !important;
+  line-height: 26px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--bg-card) !important;
+  color: var(--amber) !important;
+}
+
+/* Attribution */
+.leaflet-control-attribution {
+  background: rgba(7, 11, 24, 0.7) !important;
+  color: var(--text-muted) !important;
+  font-size: 0.6rem !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--cyan) !important;
+}
+
+/* ── PANELS ──────────────────────────────────────────────── */
 .control-panel,
 .stats-panel,
 .path-finder,
 .hub-disruptor {
-  padding: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
 }
 
-.control-panel h2,
-.stats-panel h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  letter-spacing: -0.3px;
-}
+/* Colored left border accent per panel */
+.path-finder   { border-left: 2px solid var(--cyan-border); }
+.hub-disruptor { border-left: 2px solid rgba(244, 63, 94, 0.3); }
+.stats-panel   { border-left: 2px solid var(--amber-border); }
+.ai-insights   { border-left: 2px solid rgba(167, 139, 250, 0.28); }
 
-.control-panel h3,
-.stats-panel h3,
+/* Panel heading style */
 .path-finder h3,
-.hub-disruptor h3 {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  margin-bottom: 0.875rem;
-  color: var(--text-primary);
-}
-
-/* Stat Card */
-.stat-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.125rem;
-  margin-bottom: 1rem;
-}
-
-.stat-card.highlight {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.stat-value {
-  font-size: 2.5rem;
+.hub-disruptor h3,
+.stats-panel h2,
+.stats-panel h3,
+.control-panel h2,
+.control-panel h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.625rem;
   font-weight: 700;
-  line-height: 1;
-  margin: 0.625rem 0;
-}
-
-.stat-description {
-  font-size: 0.875rem;
-  line-height: 1.4;
-  margin-bottom: 0.75rem;
-  opacity: 0.9;
-}
-
-/* Buttons */
-.airline-btn {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  margin-bottom: 0.375rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.airline-btn:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
+.path-finder h3   { color: var(--cyan); }
+.hub-disruptor h3 { color: var(--crimson); }
+.stats-panel h2,
+.stats-panel h3   { color: var(--amber); }
 
-.airline-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.reset-btn,
-.find-path-btn,
-.disrupt-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--accent);
-  border: none;
+/* ── STAT CARD (StatsPanel) ──────────────────────────────── */
+.stat-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
   border-radius: 8px;
-  color: white;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 1rem;
+  margin-bottom: 0.875rem;
 }
 
-.reset-btn:hover,
-.find-path-btn:hover,
-.disrupt-btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
+.stat-card.highlight {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
 }
 
-.reset-btn:disabled,
-.find-path-btn:disabled,
-.disrupt-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+.stat-card h3 {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  margin-bottom: 0.375rem;
 }
 
-/* Inputs */
-.airport-input,
-.hub-select {
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 0.9375rem;
+.stat-card.highlight .stat-value { color: var(--amber); }
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: 0.375rem 0;
+  color: var(--cyan);
+}
+
+.stat-description {
+  font-size: 0.8rem;
+  line-height: 1.55;
   margin-bottom: 0.75rem;
+  color: var(--text-secondary);
 }
 
-.airport-input:focus,
-.hub-select:focus {
-  outline: none;
-  border-color: var(--accent);
+.stat-description strong {
+  color: var(--amber-light);
+  font-weight: 600;
 }
 
-/* Hubs List */
+/* Stat grid inside stat-card */
+.stat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stat-item:last-child { border-bottom: none; }
+
+.stat-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.stat-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+/* ── HUBS LIST ───────────────────────────────────────────── */
 .hubs-list {
-  max-height: 280px;
+  max-height: 260px;
   overflow-y: auto;
+  margin-top: 0.5rem;
 }
 
 .hub-item {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.625rem;
-  background: var(--bg-elevated);
-  border-radius: 8px;
-  margin-bottom: 0.375rem;
-  transition: all 0.2s;
+  padding: 0.5rem 0.5rem;
+  border-radius: 5px;
+  margin-bottom: 0.2rem;
+  transition: background 0.15s;
 }
 
-.hub-item:hover {
-  background: var(--bg-primary);
-}
+.hub-item:hover { background: var(--amber-dim); }
 
 .hub-rank {
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  color: var(--accent);
-  font-size: 0.875rem;
-  min-width: 28px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  min-width: 22px;
+}
+
+.hub-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
 }
 
 .hub-code {
-  font-weight: 600;
-  font-size: 0.9375rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--amber);
+}
+
+.hub-name {
+  font-size: 0.65rem;
+  color: var(--text-muted);
 }
 
 .hub-connections {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   margin-left: auto;
-  font-weight: 600;
-  color: var(--accent);
 }
 
-/* Loading */
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.reset-btn,
+.find-path-btn,
+.disrupt-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.find-path-btn {
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan-border);
+  color: var(--cyan);
+}
+
+.find-path-btn:hover:not(:disabled) {
+  background: var(--cyan);
+  color: var(--bg-void);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.25);
+}
+
+.disrupt-btn {
+  background: var(--crimson-dim);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: var(--crimson);
+}
+
+.disrupt-btn:hover:not(:disabled) {
+  background: var(--crimson);
+  color: white;
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.25);
+}
+
+.reset-btn {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+}
+
+.reset-btn:hover {
+  background: var(--amber);
+  color: var(--bg-void);
+}
+
+.reset-disruption-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: 5px;
+  color: var(--text-muted);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.reset-disruption-btn:hover {
+  border-color: var(--border-base);
+  color: var(--text-secondary);
+  background: var(--bg-raised);
+}
+
+.reset-btn:disabled,
+.find-path-btn:disabled,
+.disrupt-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+/* ── INFO BUTTON ─────────────────────────────────────────── */
+.info-btn {
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: 4px;
+  padding: 0.3125rem 0.625rem;
+  color: var(--text-muted);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-top: 0.625rem;
+  display: inline-block;
+}
+
+.info-btn:hover {
+  background: var(--cyan-dim);
+  border-color: var(--cyan-border);
+  color: var(--cyan);
+}
+
+.info-btn.small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.5rem;
+  margin-top: 0.375rem;
+}
+
+/* ── INPUTS ──────────────────────────────────────────────── */
+.airport-input,
+.hub-select {
+  width: 100%;
+  padding: 0.5625rem 0.75rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.18s;
+}
+
+.airport-input:focus,
+.hub-select:focus {
+  outline: none;
+  border-color: var(--cyan-border);
+  box-shadow: 0 0 0 2px var(--cyan-dim);
+}
+
+.airport-input::placeholder { color: var(--text-muted); }
+
+label {
+  display: block;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 0.125rem;
+}
+
+/* Custom dropdown arrow */
+select.hub-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233d506e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+select option {
+  background: var(--bg-raised);
+  color: var(--text-primary);
+}
+
+/* ── AUTOCOMPLETE DROPDOWN ───────────────────────────────── */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% - 0.75rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--cyan-border);
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(34, 211, 238, 0.06);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.autocomplete-item {
+  padding: 0.5625rem 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background 0.12s;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: var(--cyan-dim); }
+
+.autocomplete-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--cyan);
+  min-width: 34px;
+}
+
+.autocomplete-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ── PATH FINDER DESCRIPTION ─────────────────────────────── */
+.path-description,
+.disruptor-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+/* ── PATH RESULT ─────────────────────────────────────────── */
+.path-result {
+  margin-top: 1rem;
+  padding: 0.875rem;
+  background: var(--emerald-dim);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 7px;
+  animation: fadeIn 0.25s ease;
+}
+
+.path-result h4 {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--emerald);
+  margin-bottom: 0.75rem;
+}
+
+.path-display {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.path-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-raised);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 5px;
+  padding: 0.3125rem 0.5rem;
+}
+
+.path-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--emerald);
+}
+
+.path-city {
+  font-size: 0.5625rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.1rem;
+}
+
+.path-arrow {
+  color: var(--emerald);
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.path-hops {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.path-hops strong {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--emerald);
+}
+
+/* ── HUB DISRUPTOR ───────────────────────────────────────── */
+.disruptor-controls label {
+  color: var(--text-muted);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.disruptor-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.disruption-result {
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.disruption-alert {
+  background: var(--crimson-dim);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: 5px;
+  padding: 0.625rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--crimson);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.875rem;
+  text-align: center;
+  animation: pulse-crimson 2s ease-in-out infinite;
+}
+
+@keyframes pulse-crimson {
+  0%, 100% { border-color: rgba(244, 63, 94, 0.35); }
+  50% { border-color: var(--crimson); box-shadow: 0 0 14px rgba(244, 63, 94, 0.15); }
+}
+
+.impact-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.impact-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  padding: 0.75rem 0.625rem;
+  text-align: center;
+}
+
+.impact-card.critical {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: var(--crimson-dim);
+}
+
+.impact-label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.impact-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.impact-card.critical .impact-value { color: var(--crimson); }
+
+.impact-change {
+  font-size: 0.5625rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.impact-change.increase {
+  color: var(--crimson);
+  font-weight: 700;
+}
+
+.disruption-explanation {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  padding: 0.875rem;
+}
+
+.disruption-explanation h4 {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.disruption-explanation p {
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.disruption-explanation p:last-child { margin-bottom: 0; }
+
+.disruption-explanation strong {
+  color: var(--amber-light);
+  font-weight: 600;
+}
+
+.disruption-insight {
+  font-size: 0.7rem !important;
+  color: var(--text-muted) !important;
+  font-style: italic;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.5rem;
+}
+
+.info-box {
+  margin-top: 0.875rem;
+  padding: 0.875rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-left: 2px solid var(--amber-border);
+  border-radius: 0 6px 6px 0;
+}
+
+.info-box h4 {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  margin-bottom: 0.5rem;
+}
+
+.info-box p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.info-box strong {
+  color: var(--amber-light);
+  font-weight: 600;
+}
+
+/* ── LOADING SCREEN ──────────────────────────────────────── */
 .loading-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg-primary);
+  background: var(--bg-void);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 2.5rem;
 }
 
+.loading-radar {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: radar-expand 2.4s ease-out infinite;
+}
+
+.radar-ring.r1 {
+  width: 10px; height: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.8);
+  animation-delay: 0s;
+}
+
+.radar-ring.r2 {
+  width: 10px; height: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.6);
+  animation-delay: 0.8s;
+}
+
+.radar-ring.r3 {
+  width: 10px; height: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  animation-delay: 1.6s;
+}
+
+@keyframes radar-expand {
+  0%   { width: 8px;   height: 8px;   opacity: 1; }
+  100% { width: 140px; height: 140px; opacity: 0; }
+}
+
+.radar-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 12px var(--amber), 0 0 32px rgba(245, 158, 11, 0.3);
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50%       { transform: translate(-50%, -50%) scale(1.6); opacity: 0.5; }
+}
+
+.loading-text {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: var(--amber);
+}
+
+.loading-subtitle {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.loading-progress {
+  width: 180px;
+  height: 1px;
+  background: var(--border-base);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 0.625rem;
+}
+
+.loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  animation: loading-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes loading-sweep {
+  0%   { width: 0%;   margin-left: 0%; }
+  50%  { width: 55%;  margin-left: 20%; }
+  100% { width: 0%;   margin-left: 100%; }
+}
+
+.loading-detail {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Legacy spinner (fallback) */
 .loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid var(--border-color);
-  border-top-color: var(--accent);
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border-base);
+  border-top-color: var(--amber);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* Hide unnecessary elements */
-.stat-icon,
-.alert-icon {
-  display: none;
-}
-
-/* Airport Sidebar */
+/* ── AIRPORT SIDEBAR ─────────────────────────────────────── */
 .airport-sidebar {
   position: fixed;
   right: 0;
-  top: 60px;
-  width: 400px;
-  height: calc(100vh - 60px);
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
+  top: 52px;
+  width: 380px;
+  height: calc(100vh - 52px);
+  background-color: var(--bg-surface);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-left: 1px solid var(--border-base);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.75);
   z-index: 1001;
-  animation: slideInRight 0.3s ease-out;
+  animation: slideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
 .airport-sidebar-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-elevated);
+  padding: 1.25rem 1.375rem;
+  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-raised);
   flex-shrink: 0;
+  position: relative;
+}
+
+/* Accent gradient under header */
+.airport-sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--amber) 0%, var(--cyan) 50%, transparent 100%);
+  opacity: 0.4;
+}
+
+.airport-sidebar-header h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.125rem;
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.airport-sidebar-header h3 {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0.375rem 0 0.25rem;
+  line-height: 1.4;
+}
+
+.airport-sidebar-header p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.close-btn {
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: 5px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  border-color: var(--amber-border);
+  color: var(--amber);
+  background: var(--amber-dim);
 }
 
 .airport-sidebar-content {
@@ -446,94 +1112,52 @@ body {
   overflow-x: hidden;
 }
 
-.airport-sidebar-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--accent);
-  letter-spacing: -1px;
-}
-
-.airport-sidebar-header h3 {
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin: 0.25rem 0;
-  color: var(--text-primary);
-  line-height: 1.4;
-}
-
-.airport-sidebar-header p {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  margin: 0.25rem 0 0 0;
-}
-
-.close-btn {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.25rem;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.close-btn:hover {
-  background: var(--bg-secondary);
-  border-color: var(--accent);
-  color: var(--text-primary);
-  transform: scale(1.05);
-}
-
+/* ── CONNECTIVITY SCORE ──────────────────────────────────── */
 .connectivity-score {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, var(--accent) 0%, #0550ae 100%);
+  padding: 1.25rem 1.5rem;
+  background: var(--amber-dim);
+  border-bottom: 1px solid var(--amber-border);
   text-align: center;
-  color: white;
 }
 
 .score-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.5rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0.9;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.2em;
+  color: var(--amber);
+  opacity: 0.65;
+  margin-bottom: 0.25rem;
 }
 
 .score-value {
-  font-size: 3.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.25rem;
   font-weight: 800;
+  color: var(--amber);
   line-height: 1;
-  margin: 0.5rem 0;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin: 0.25rem 0;
 }
 
 .score-subtitle {
-  font-size: 0.875rem;
-  opacity: 0.9;
+  font-size: 0.6875rem;
+  color: var(--amber);
+  opacity: 0.6;
   font-weight: 500;
 }
 
+/* ── CONNECTIONS LIST ────────────────────────────────────── */
 .connections-list-header {
-  padding: 1rem 1.5rem 0.75rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.875rem 1.375rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .connections-list-header h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 0.5rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
 }
 
 .connections-list {
@@ -541,274 +1165,388 @@ body {
 }
 
 .connection-item {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.875rem 1rem;
-  margin-bottom: 0.5rem;
-  transition: all 0.2s;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 0.5625rem 0.875rem;
+  margin-bottom: 0.3rem;
+  transition: all 0.15s ease;
   cursor: pointer;
 }
 
 .connection-item:hover {
-  border-color: var(--accent);
-  background: var(--bg-primary);
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(9, 105, 218, 0.15);
+  border-color: var(--cyan-border);
+  background: var(--cyan-dim);
+  transform: translateX(3px);
+}
+
+.connection-item.selected {
+  border-color: var(--amber-border);
+  background: var(--amber-dim);
 }
 
 .connection-main {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
 }
 
 .connection-code {
-  font-size: 1.125rem;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  color: var(--accent);
-  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 0.9375rem;
+  color: var(--cyan);
 }
+
+.connection-item.selected .connection-code { color: var(--amber); }
 
 .connection-city {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ── AIRPORT STATS SECTION ───────────────────────────────── */
+.airport-stats-section {
+  padding: 1.125rem 1.375rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stats-section-title {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--amber);
+  margin-bottom: 0.875rem;
+}
+
+.busyness-indicator {
+  margin-bottom: 0.875rem;
+}
+
+.busyness-label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.busyness-bar-container {
+  width: 100%;
+  height: 3px;
+  background: var(--border-base);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.3125rem;
+}
+
+.busyness-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.busyness-level {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+/* Airport stats-grid stat-card (scoped) */
+.airport-stats-section .stat-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 7px;
+  padding: 0.75rem;
+  text-align: center;
+  transition: transform 0.18s;
+  margin-bottom: 0;
+}
+
+.airport-stats-section .stat-card:hover { transform: translateY(-2px); }
+
+.airport-stats-section .stat-icon { display: none; }
+
+.airport-stats-section .stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-bottom: 0.2rem;
+  line-height: 1;
+}
+
+.airport-stats-section .stat-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.peak-season-info {
+  border-left: 2px solid var(--amber-border);
+  padding: 0.5625rem 0.75rem;
+  margin-bottom: 0.875rem;
+  background: var(--amber-dim);
+  border-radius: 0 5px 5px 0;
+}
+
+.peak-season-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.peak-season-value {
+  font-size: 0.8rem;
   color: var(--text-primary);
   font-weight: 500;
+  line-height: 1.4;
 }
 
-.connection-airlines {
+.main-airlines-section { margin-bottom: 0.875rem; }
+
+.airlines-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.airlines-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.5rem;
+  gap: 0.4rem;
 }
 
-.airline-tag {
-  background: var(--accent);
-  color: white;
-  padding: 0.25rem 0.625rem;
-  border-radius: 6px;
+.airline-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 5px;
+  padding: 0.3125rem 0.5625rem;
+  transition: all 0.18s;
+}
+
+.airline-badge:hover {
+  transform: scale(1.04);
+  border-color: var(--amber-border);
+}
+
+.airline-logo-img {
+  height: 18px;
+  width: auto;
+  max-width: 32px;
+  object-fit: contain;
+  filter: brightness(0.8) saturate(0.8);
+}
+
+.airline-logo-fallback { display: none; }
+
+.airline-name {
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-/* Enhanced Info Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 2rem;
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-content h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 1.5rem;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.modal-section {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  transition: all 0.3s;
-}
-
-.modal-section:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(9, 105, 218, 0.1);
-  transform: translateY(-2px);
-}
-
-.modal-section h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modal-section h3::before {
-  content: "→";
-  font-size: 1.5rem;
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.modal-section p {
-  font-size: 0.9375rem;
-  line-height: 1.6;
   color: var(--text-secondary);
-  margin: 0;
 }
 
-.modal-close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+.traffic-prediction-box {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.traffic-prediction-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.traffic-prediction-badge {
+  display: inline-block;
+  padding: 0.3125rem 0.875rem;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.375rem;
+}
+
+.traffic-prediction-badge.critical { background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.4); color: var(--crimson); }
+.traffic-prediction-badge.high     { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); color: #f97316; }
+.traffic-prediction-badge.medium   { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+.traffic-prediction-badge.low      { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: var(--emerald); }
+
+.traffic-prediction-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* ── ROUTE DETAILS (airport sidebar) ─────────────────────── */
+.route-details-section {
+  padding: 1.125rem 1.375rem;
+  border-top: 1px solid var(--border-base);
+  background: var(--bg-raised);
+}
+
+.route-details-header { margin-bottom: 0.875rem; }
+
+.route-details-header h4 {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--cyan);
+}
+
+.route-endpoints {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-}
-
-.modal-close:hover {
-  background: var(--bg-primary);
-  border-color: var(--accent);
-  color: var(--text-primary);
-  transform: rotate(90deg);
-}
-
-.modal-close-btn {
-  margin-top: 1.5rem;
-  width: 100%;
+  justify-content: space-between;
   padding: 0.875rem;
-  background: var(--accent);
-  border: none;
-  border-radius: 10px;
-  color: white;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 7px;
+  margin-bottom: 0.75rem;
+}
+
+.route-endpoint {
+  flex: 1;
+  text-align: center;
+}
+
+.endpoint-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--cyan);
+}
+
+.endpoint-name {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.route-arrow {
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin: 0 0.75rem;
+  color: var(--amber);
+  opacity: 0.7;
 }
 
-.modal-close-btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+.route-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-/* Info Button Enhancements */
-.info-btn {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  color: var(--accent);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 0.75rem;
+.route-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+  transition: transform 0.18s;
 }
 
-.info-btn:hover {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(9, 105, 218, 0.2);
+.route-stat-card:hover { transform: translateY(-2px); }
+
+.route-stat-icon { display: none; }
+
+.route-stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: 0.2rem;
 }
 
-.info-btn.small {
-  padding: 0.375rem 0.75rem;
+.route-stat-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.route-info-box {
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+}
+
+.route-info-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.route-info-value {
   font-size: 0.75rem;
-  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .app-layout-new {
-    flex-direction: column;
-  }
-
-  .controls-sidebar {
-    width: 100%;
-    max-height: 40vh;
-    border-left: none;
-    border-top: 1px solid var(--border-color);
-  }
-
-  .airport-sidebar {
-    width: 100%;
-    left: 0;
-    right: 0;
-  }
-
-  .modal-content {
-    margin: 1rem;
-    width: calc(100% - 2rem);
-  }
+.route-info-note {
+  padding: 0.5625rem 0.75rem;
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan-border);
+  border-radius: 5px;
+  font-size: 0.75rem;
+  color: var(--cyan);
+  line-height: 1.5;
 }
 
-/* AI Insights Panel */
+/* ── AI INSIGHTS PANEL ───────────────────────────────────── */
 .ai-insights {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .ai-insights h3 {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--violet);
   margin-bottom: 1rem;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .insight-section {
-  margin-bottom: 1.25rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .insight-section:last-of-type {
@@ -817,11 +1555,12 @@ body {
 }
 
 .insight-section h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: var(--accent);
-  letter-spacing: -0.2px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 0.5625rem;
 }
 
 .insight-content {
@@ -830,8 +1569,9 @@ body {
 }
 
 .insight-summary {
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  line-height: 1.55;
+  font-size: 0.8rem;
 }
 
 .insight-summary strong {
@@ -842,594 +1582,557 @@ body {
 .insight-detail {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  padding: 0.3125rem 0.5625rem;
+  background: var(--bg-raised);
+  border-radius: 4px;
+  margin-bottom: 0.3rem;
 }
 
 .insight-detail .label {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
+  color: var(--text-muted);
 }
 
 .insight-detail .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
   color: var(--text-primary);
   font-weight: 600;
-  font-size: 0.875rem;
 }
 
 .strategic-list,
 .route-predictions,
 .traffic-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .strategic-list li,
 .traffic-list li {
-  padding: 0.625rem 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
+  padding: 0.4375rem 0.5625rem;
+  background: var(--bg-raised);
+  border-radius: 4px;
+  margin-bottom: 0.3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
+  transition: background 0.12s;
+  cursor: default;
 }
+
+.strategic-list li:hover,
+.traffic-list li:hover { background: var(--cyan-dim); }
 
 .strategic-list li strong,
 .traffic-list li strong {
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-right: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--amber);
+  font-weight: 700;
 }
 
 .hub-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.25rem 0.625rem;
-  border-radius: 4px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  background: var(--violet-dim);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  color: var(--violet);
+  padding: 0.125rem 0.4375rem;
+  border-radius: 3px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .route-predictions li {
-  padding: 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  font-size: 0.8125rem;
+  padding: 0.4375rem 0.5625rem;
+  background: var(--bg-raised);
+  border-radius: 4px;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  transition: all 0.12s;
 }
 
 .route-pair {
-  color: var(--text-primary);
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--cyan);
+  font-weight: 700;
   font-size: 0.875rem;
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
 }
 
 .route-cities {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
 }
 
 .route-score {
-  color: var(--accent);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--amber);
+  font-size: 0.6875rem;
+  font-weight: 600;
 }
 
 .traffic-badge {
-  padding: 0.25rem 0.625rem;
-  border-radius: 4px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 3px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.traffic-badge.critical {
-  background: #ff4444;
-  color: white;
-}
-
-.traffic-badge.high {
-  background: #ffb020;
-  color: #1a1a1a;
-}
-
-.traffic-badge.medium {
-  background: #ffd54f;
-  color: #1a1a1a;
-}
-
-.traffic-badge.low {
-  background: #81c784;
-  color: #1a1a1a;
-}
+.traffic-badge.critical { background: rgba(244, 63, 94, 0.18); border: 1px solid rgba(244, 63, 94, 0.35); color: var(--crimson); }
+.traffic-badge.high     { background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.28); color: #f97316; }
+.traffic-badge.medium   { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+.traffic-badge.low      { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.22); color: var(--emerald); }
 
 .insight-footer {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  font-size: 0.6875rem;
-  color: var(--text-secondary);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.6rem;
+  color: var(--text-muted);
   font-style: italic;
   line-height: 1.4;
 }
 
 .clickable-insight {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .clickable-insight:hover {
-  background: var(--bg-primary) !important;
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--cyan-dim) !important;
+  transform: translateX(3px);
 }
 
-.clickable-insight:active {
-  transform: translateX(2px);
+/* ── MODAL ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 15, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
 }
 
-.modal-content-wide {
-  max-width: 700px !important;
-  max-height: 85vh;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
   overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+  box-shadow: 0 32px 96px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--border-base);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-markdown {
+.modal-content-wide { max-width: 700px !important; }
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-content h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-section {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 8px;
+  padding: 1.125rem;
+  margin-bottom: 0.625rem;
+  transition: border-color 0.18s;
+}
+
+.modal-section:hover { border-color: var(--cyan-border); }
+
+.modal-section h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cyan);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-section h3::before {
+  content: '→';
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.modal-section p {
+  font-size: 0.875rem;
   line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.125rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  border-color: var(--amber-border);
+  color: var(--amber);
+  transform: rotate(90deg);
+}
+
+.modal-close-btn {
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan-border);
+  border-radius: 7px;
+  color: var(--cyan);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.modal-close-btn:hover {
+  background: var(--cyan);
+  color: var(--bg-void);
+}
+
+/* Modal markdown */
+.modal-markdown {
+  line-height: 1.65;
   color: var(--text-primary);
 }
 
 .modal-markdown h3 {
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
+  color: var(--cyan);
+  border-bottom: 1px solid var(--border-base);
   padding-bottom: 0.5rem;
+  margin: 1rem 0 0.625rem;
 }
 
-.modal-markdown strong {
-  color: var(--accent);
-}
+.modal-markdown strong { color: var(--amber); }
 
 .modal-markdown code {
-  background: var(--bg-secondary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
   padding: 0.125rem 0.375rem;
   border-radius: 3px;
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.875em;
+  color: var(--cyan);
 }
 
-/* Airport Statistics Section */
-.airport-stats-section {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+/* ── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-base);
+  border-radius: 3px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--amber-border); }
 
-.stats-section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-}
-
-.busyness-indicator {
-  margin-bottom: 1.25rem;
-}
-
-.busyness-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.busyness-bar-container {
+/* ── AIRLINE BUTTONS (legacy) ────────────────────────────── */
+.airline-btn {
   width: 100%;
-  height: 12px;
-  background: var(--bg-secondary);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.3rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
   border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-}
-
-.busyness-bar {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.6s ease;
-}
-
-.busyness-level {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-.stat-card {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 0.875rem;
-  text-align: center;
-  transition: transform 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-}
-
-.stat-icon {
-  font-size: 1.5rem;
-  margin-bottom: 0.375rem;
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.6875rem;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  font-weight: 500;
-}
-
-.peak-season-info {
-  background: var(--bg-secondary);
-  border-left: 3px solid var(--accent);
-  border-radius: 6px;
-  padding: 0.875rem;
-  margin-bottom: 1.25rem;
-}
-
-.peak-season-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 0.375rem;
-}
-
-.peak-season-value {
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.main-airlines-section {
-  margin-bottom: 1.25rem;
-}
-
-.airlines-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.airlines-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.airline-badge {
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--bg-secondary);
-  border: 2px solid;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+}
+
+.airline-btn:hover {
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+.airline-btn.active {
+  background: var(--amber-dim);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .app-layout-new { flex-direction: column; }
+
+  .modal-content {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+}
+
+/* ── MISC ────────────────────────────────────────────────── */
+.stat-icon,
+.alert-icon {
+  display: none;
+}
+
+/* Country button (not used but kept for compat) */
+.header-controls-center {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.country-btn {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-secondary);
   font-size: 0.8125rem;
-  transition: all 0.2s ease;
-}
-
-.airline-badge:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.airline-logo-img {
-  height: 24px;
-  width: auto;
-  max-width: 40px;
-  object-fit: contain;
-}
-
-.airline-logo-fallback {
-  font-size: 1.25rem;
-}
-
-.airline-name {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.traffic-prediction-box {
-  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-elevated));
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem;
-  text-align: center;
-}
-
-.traffic-prediction-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.traffic-prediction-badge {
-  display: inline-block;
-  padding: 0.5rem 1.25rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.traffic-prediction-badge.critical {
-  background: #ff4444;
-  color: white;
-}
-
-.traffic-prediction-badge.high {
-  background: #ffb020;
-  color: #1a1a1a;
-}
-
-.traffic-prediction-badge.medium {
-  background: #ffd54f;
-  color: #1a1a1a;
-}
-
-.traffic-prediction-badge.low {
-  background: #81c784;
-  color: #1a1a1a;
-}
-
-.traffic-prediction-score {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
 }
 
-/* Route Details Panel */
+.country-btn.active {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+/* Route details panel (floating variant, kept for compat) */
 .route-details-panel {
   position: fixed;
-  top: 80px;
+  top: 70px;
   right: 20px;
-  width: 380px;
-  max-height: calc(100vh - 100px);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 360px;
+  max-height: calc(100vh - 90px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
   overflow-y: auto;
   z-index: 1000;
-  animation: slideInRight 0.3s ease;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.route-details-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.route-details-header h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.route-endpoints {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem 1.25rem;
-  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-elevated));
-}
-
-.route-endpoint {
-  flex: 1;
-  text-align: center;
-}
-
-.endpoint-code {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 0.25rem;
-}
-
-.endpoint-name {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.route-arrow {
-  font-size: 1.75rem;
-  margin: 0 1rem;
-  color: var(--accent);
-}
-
-.route-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.route-stat-card {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 1rem;
-  text-align: center;
-  transition: transform 0.2s ease;
-}
-
-.route-stat-card:hover {
-  transform: translateY(-2px);
-}
-
-.route-stat-icon {
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.route-stat-value {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-}
-
-.route-stat-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .route-airlines-section {
-  padding: 1.25rem;
-  border-top: 1px solid var(--border-color);
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-base);
 }
 
 .route-airlines-section h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
 }
 
 .route-airlines-count {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  font-weight: 500;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
 }
 
 .route-airlines-list {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
 .route-airline-badge {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: var(--bg-elevated);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
+  gap: 0.625rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  padding: 0.625rem;
+  transition: all 0.18s;
 }
 
 .route-airline-badge:hover {
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--amber-border);
+  transform: scale(1.01);
 }
 
-.route-info-box {
-  padding: 1rem 1.25rem;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  text-align: center;
-}
-
-.route-info-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 0.375rem;
-}
-
-.route-info-value {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  line-height: 1.4;
-}
-
-.route-info-note {
-  padding: 0.875rem 1.25rem;
-  background: linear-gradient(135deg, rgba(9, 105, 218, 0.1), rgba(9, 105, 218, 0.05));
-  border-top: 1px solid var(--border-color);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  text-align: center;
-}
-
-/* Connection Item Styles */
+/* Ensure connection-item transition on both states */
 .connection-item {
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.connection-item:hover {
-  background: var(--bg-secondary);
-  transform: translateX(4px);
+/* ── ANIMATION UTILITIES ─────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.connection-item.selected {
-  background: linear-gradient(90deg, var(--accent), rgba(9, 105, 218, 0.1));
-  border-left: 3px solid var(--accent);
-  padding-left: calc(0.75rem - 3px);
+/* ── GLOBE TOOLTIP ───────────────────────────────────────── */
+.globe-tooltip {
+  background: var(--bg-raised);
+  border: 1px solid var(--cyan-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.75), 0 0 20px rgba(34,211,238,0.06);
+  min-width: 170px;
+  animation: fadeIn 0.12s ease;
 }
 
-.connection-item.selected .connection-code {
-  color: var(--accent);
+.globe-tooltip-code {
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--amber);
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
 }
+
+.globe-tooltip-name {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+  line-height: 1.35;
+}
+
+.globe-tooltip-connections {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+.globe-tooltip-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan);
+  flex-shrink: 0;
+}
+
+/* ── GLOBE HINT ──────────────────────────────────────────── */
+.globe-hint {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  pointer-events: none;
+  animation: fadeIn 1s ease 2s both;
+}
+
+/* ── AIRLINE BADGE (redesigned) ──────────────────────────── */
+.airline-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-raised);
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 0.4375rem 0.625rem;
+  transition: all 0.18s;
+}
+
+.airline-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.airline-logo-img {
+  height: 22px;
+  width: auto;
+  max-width: 40px;
+  object-fit: contain;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.airline-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.airline-badge-iata {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.airline-badge-name {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ── RESPONSIVE (updated for new sidebar widths) ─────────── */
+@media (max-width: 1100px) {
+  .controls-sidebar {
+    width: 100%;
+    min-width: unset;
+    max-height: 42vh;
+    border-left: none;
+    border-top: 1px solid var(--border-base);
+  }
+
+  .airport-sidebar {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+}
+

@@ -84,16 +84,16 @@ const NetworkMap = ({
     return '#4CAF50';
   };
 
-  // Color palette (light mode only)
-  const routeColor = 'rgba(50, 100, 200, 0.25)';
-  const selectedRouteColor = '#FF6B35';
-  const hubColor = '#E63946';
-  const nodeColor = '#0066CC';
-  const pathColor = '#00CC66';
+  // Dark mode color palette
+  const routeColor = 'rgba(34, 211, 238, 0.18)';
+  const selectedRouteColor = '#f59e0b';
+  const hubColor = '#f43f5e';
+  const nodeColor = '#22d3ee';
+  const pathColor = '#10b981';
 
-  // Tile layer
-  const tileLayerUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const tileLayerAttribution = '&copy; OpenStreetMap contributors';
+  // Dark tile layer (CartoDB Dark Matter)
+  const tileLayerUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const tileLayerAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
   return (
     <MapContainer
@@ -231,43 +231,58 @@ const NetworkMap = ({
               offset={[0, -10]}
               opacity={1}
               permanent={false}
-              className="airport-tooltip-light"
             >
               <div style={{
-                fontSize: '13px',
-                padding: '10px 14px',
-                backgroundColor: '#ffffff',
-                border: '2px solid #0969da',
-                borderRadius: '8px',
-                color: '#1f2328',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                padding: '9px 13px',
+                backgroundColor: '#0f1728',
+                border: '1px solid rgba(34, 211, 238, 0.32)',
+                borderRadius: '7px',
+                boxShadow: '0 8px 28px rgba(0,0,0,0.8), 0 0 16px rgba(34,211,238,0.06)',
+                fontFamily: "'Sora', -apple-system, sans-serif",
                 textTransform: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif'
+                minWidth: '160px',
               }}>
                 <div style={{
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontWeight: 700,
-                  marginBottom: '4px',
-                  color: '#1f2328',
+                  fontSize: '13px',
+                  color: '#f59e0b',
+                  letterSpacing: '0.04em',
+                  marginBottom: '3px',
                   textTransform: 'none',
-                  fontSize: '14px'
                 }}>
-                  {airport.code.toUpperCase()} - {airport.city}, {airport.state || 'US'}
+                  {airport.code} — {airport.city}
                 </div>
                 <div style={{
-                  fontSize: '12px',
-                  marginBottom: '2px',
-                  color: '#636c76',
-                  textTransform: 'none'
+                  fontSize: '11px',
+                  color: '#7a90b8',
+                  marginBottom: '5px',
+                  textTransform: 'none',
                 }}>
                   {airport.name}
                 </div>
                 <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#0969da',
-                  textTransform: 'none'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}>
-                  {degree} connections
+                  <div style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    background: '#22d3ee',
+                    boxShadow: '0 0 6px #22d3ee',
+                    flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#22d3ee',
+                    textTransform: 'none',
+                  }}>
+                    {degree} connections
+                  </span>
                 </div>
               </div>
             </Tooltip>
