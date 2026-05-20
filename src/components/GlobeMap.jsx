@@ -2,7 +2,61 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 
-/* ── palette ─────────────────────────────────────────────── */
+/* ── Quaternion (versor) helpers ─────────────────────────────
+   Correct 3-D rotation composition — straight drags stay straight
+   regardless of globe tilt. Raw λ/φ addition causes gimbal lock.  */
+function vFromAngles([l, p, g]) {
+  l *= Math.PI / 360; p *= Math.PI / 360; g *= Math.PI / 360;
+  const sl = Math.sin(l), cl = Math.cos(l);
+  const sp = Math.sin(p), cp = Math.cos(p);
+  const sg = Math.sin(g), cg = Math.cos(g);
+  return [
+    cl * cp * cg + sl * sp * sg,
+    sl * cp * cg - cl * sp * sg,
+    cl * sp * cg + sl * cp * sg,
+    cl * cp * sg - sl * sp * cg,
+  ];
+}
+
+function vToAngles([a, b, c, d]) {
+  return [
+    Math.atan2(2 * (a * b + c * d), 1 - 2 * (b * b + c * c)) * 180 / Math.PI,
+    Math.asin(Math.max(-1, Math.min(1, 2 * (a * c - d * b)))) * 180 / Math.PI,
+    Math.atan2(2 * (a * d + b * c), 1 - 2 * (c * c + d * d)) * 180 / Math.PI,
+  ];
+}
+
+function vMul([a1, b1, c1, d1], [a2, b2, c2, d2]) {
+  return [
+    a1*a2 - b1*b2 - c1*c2 - d1*d2,
+    a1*b2 + b1*a2 + c1*d2 - d1*c2,
+    a1*c2 - b1*d2 + c1*a2 + d1*b2,
+    a1*d2 + b1*c2 - c1*b2 + d1*a2,
+  ];
+}
+
+function vDelta(v0, v1) {
+  const w = [v0[1]*v1[2]-v0[2]*v1[1], v0[2]*v1[0]-v0[0]*v1[2], v0[0]*v1[1]-v0[1]*v1[0]];
+  const n = Math.sqrt(w[0]*w[0] + w[1]*w[1] + w[2]*w[2]);
+  if (!n) return [1, 0, 0, 0];
+  const t = Math.atan2(n, v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
+  const s = Math.sin(t / 2) / n;
+  return [Math.cos(t / 2), w[0]*s, w[1]*s, w[2]*s];
+}
+
+function geoToCart([l, p]) {
+  l *= Math.PI / 180; p *= Math.PI / 180;
+  return [Math.cos(p)*Math.cos(l), Math.cos(p)*Math.sin(l), Math.sin(p)];
+}
+
+/* Build a fresh projection from current state — used in event handlers */
+function makeProj(W, H, R, rotation) {
+  return d3.geoOrthographic()
+    .scale(R).translate([W / 2, H / 2])
+    .rotate(rotation).clipAngle(90);
+}
+
+/* ── community palette ───────────────────────────────────── */
 const COMMUNITY_COLORS = [
   '#f43f5e', '#3b82f6', '#22c55e', '#f59e0b',
   '#a855f7', '#f97316', '#06b6d4', '#84cc16',
@@ -26,8 +80,8 @@ function airportColor(code, S) {
 
 /* ═══════════════════════════════════════════════════════════
    GlobeMap
-   Rotate : click-drag  OR  two-finger scroll (trackpad pan)
-   Zoom   : scroll-wheel  OR  pinch (ctrl+scroll / touch)
+   Rotate  : click-drag  |  two-finger trackpad scroll (pan)
+   Zoom    : ctrl+scroll / pinch  |  mouse wheel
    ═══════════════════════════════════════════════════════════ */
 export default function GlobeMap({
   airports = [], routes = [],
@@ -40,15 +94,16 @@ export default function GlobeMap({
   const canvasRef = useRef(null);
   const [tooltip, setTooltip] = useState(null);
 
-  /* single stable mutable object — never triggers re-render */
   const S = useRef({
     rotation:   [96, -38, 0],
     zoomFactor: 1.0,
     targetZoom: 1.0,
-    /* drag state */
+    /* drag state — versor-based */
     dragging:     false,
-    mouseDownPos: { x: 0, y: 0 },
-    lastDragPos:  { x: 0, y: 0 },
+    mouseDownXY:  null,   // {x,y} canvas-relative
+    v0:           null,   // cartesian of geo point at drag start
+    q0:           null,   // quaternion at drag start
+    r0:           null,   // rotation array at drag start
     /* touch */
     pinchDist:    null,
     pinchStart:   null,
@@ -57,8 +112,8 @@ export default function GlobeMap({
     idleTimer:    null,
     animId:       null,
     /* data */
-    worldLo:      null,   // 110m
-    worldHi:      null,   // 50m (lazy)
+    worldLo:      null,
+    worldHi:      null,
     stars:        [],
     hits:         [],
     /* props */
@@ -67,7 +122,6 @@ export default function GlobeMap({
     communities: null, trafficLoad: null, onAirportClick: null,
   }).current;
 
-  /* sync props on every render */
   S.airports         = airports;
   S.routes           = routes;
   S.highlightedPath  = highlightedPath;
@@ -85,8 +139,7 @@ export default function GlobeMap({
     const wrap   = wrapRef.current;
     if (!canvas || !wrap) return;
 
-    const W = wrap.clientWidth;
-    const H = wrap.clientHeight;
+    const W = wrap.clientWidth, H = wrap.clientHeight;
     if (!W || !H) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -97,24 +150,18 @@ export default function GlobeMap({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
 
-    const baseR = Math.min(W, H) * 0.44;
-    const R  = baseR * S.zoomFactor;
+    const R  = Math.min(W, H) * 0.44 * S.zoomFactor;
     const cx = W / 2, cy = H / 2;
-
-    const proj = d3.geoOrthographic()
-      .scale(R).translate([cx, cy])
-      .rotate(S.rotation).clipAngle(90);
+    const proj = makeProj(W, H, R, S.rotation);
     const path = d3.geoPath(proj, ctx);
 
     /* ① stars */
     for (const s of S.stars) {
-      ctx.beginPath();
-      ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = s.c;
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.c; ctx.fill();
     }
 
-    /* ② outer atmosphere */
+    /* ② atmosphere */
     const atmo = ctx.createRadialGradient(cx, cy, R * 0.88, cx, cy, R * 1.38);
     atmo.addColorStop(0,   'rgba(56,189,248,0.09)');
     atmo.addColorStop(0.5, 'rgba(30,100,200,0.04)');
@@ -124,28 +171,34 @@ export default function GlobeMap({
 
     /* ③ ocean */
     ctx.beginPath(); path({ type: 'Sphere' });
-    const ocean = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.04, cx + R * 0.1, cy + R * 0.15, R * 1.05);
-    ocean.addColorStop(0,   '#1a3a60');
-    ocean.addColorStop(0.35,'#0e2240');
-    ocean.addColorStop(0.75,'#07142a');
-    ocean.addColorStop(1,   '#040c1a');
+    const ocean = ctx.createRadialGradient(
+      cx - R * 0.3, cy - R * 0.3, R * 0.04,
+      cx + R * 0.1, cy + R * 0.15, R * 1.05
+    );
+    ocean.addColorStop(0,    '#1a3a60');
+    ocean.addColorStop(0.35, '#0e2240');
+    ocean.addColorStop(0.75, '#07142a');
+    ocean.addColorStop(1,    '#040c1a');
     ctx.fillStyle = ocean; ctx.fill();
 
-    /* ④ specular highlight */
+    /* ④ specular */
     ctx.save();
     ctx.beginPath(); path({ type: 'Sphere' }); ctx.clip();
-    const spec = ctx.createRadialGradient(cx - R * 0.4, cy - R * 0.4, 0, cx - R * 0.15, cy - R * 0.15, R * 0.7);
+    const spec = ctx.createRadialGradient(
+      cx - R * 0.4, cy - R * 0.4, 0,
+      cx - R * 0.15, cy - R * 0.15, R * 0.7
+    );
     spec.addColorStop(0, 'rgba(180,220,255,0.11)');
     spec.addColorStop(1, 'transparent');
     ctx.fillStyle = spec; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
     ctx.restore();
 
     /* ⑤ graticule */
-    const step = S.zoomFactor > 3 ? 5 : S.zoomFactor > 1.8 ? 10 : 20;
-    ctx.beginPath(); path(d3.geoGraticule().step([step, step])());
+    const gStep = S.zoomFactor > 3 ? 5 : S.zoomFactor > 1.8 ? 10 : 20;
+    ctx.beginPath(); path(d3.geoGraticule().step([gStep, gStep])());
     ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 0.4; ctx.stroke();
 
-    /* ⑥ countries — switch to hi-res when zoomed */
+    /* ⑥ countries */
     const worldGeo = (S.zoomFactor > 2 && S.worldHi) ? S.worldHi : S.worldLo;
     if (worldGeo) {
       ctx.beginPath(); path(worldGeo);
@@ -154,7 +207,7 @@ export default function GlobeMap({
       ctx.strokeStyle = `rgba(100,180,230,${bop})`; ctx.lineWidth = 0.5; ctx.stroke();
     }
 
-    /* ⑦ rim glow */
+    /* ⑦ rim */
     ctx.beginPath(); path({ type: 'Sphere' });
     const rim = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
     rim.addColorStop(0,   'rgba(56,189,248,0.45)');
@@ -170,7 +223,6 @@ export default function GlobeMap({
     let fRoutes = S.routes;
     if (S.removedHub) fRoutes = fRoutes.filter(r => r.source !== S.removedHub && r.target !== S.removedHub);
     if (S.selectedAirport) fRoutes = fRoutes.filter(r => r.source === S.selectedAirport.code || r.target === S.selectedAirport.code);
-
     const step5 = S.selectedAirport ? 1 : Math.max(1, Math.round(5 / Math.sqrt(S.zoomFactor)));
 
     if (!S.showHeatmap) {
@@ -213,14 +265,13 @@ export default function GlobeMap({
       if (!px) continue;
       const [x, y] = px;
 
-      const deg      = S.degreeCentrality?.get(airport.code) || 0;
-      const isHub    = deg > 50;
-      const isSel    = S.selectedAirport?.code === airport.code;
-      const r        = (isSel ? 3 : 0) + Math.max(2, Math.min(9, 2.5 + (deg / maxDeg) * 7));
-      const opacity  = S.showHeatmap ? Math.max(0.45, deg / maxDeg) : 0.93;
-      const col      = airportColor(airport.code, S);
+      const deg     = S.degreeCentrality?.get(airport.code) || 0;
+      const isHub   = deg > 50;
+      const isSel   = S.selectedAirport?.code === airport.code;
+      const r       = (isSel ? 3 : 0) + Math.max(2, Math.min(9, 2.5 + (deg / maxDeg) * 7));
+      const opacity = S.showHeatmap ? Math.max(0.45, deg / maxDeg) : 0.93;
+      const col     = airportColor(airport.code, S);
 
-      /* halo */
       if (isHub || isSel) {
         const hr   = r + (isSel ? 9 : 5);
         const halo = ctx.createRadialGradient(x, y, r * 0.3, x, y, hr);
@@ -229,11 +280,9 @@ export default function GlobeMap({
         ctx.fillStyle = halo; ctx.fill();
       }
 
-      /* dot */
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.globalAlpha = opacity; ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1;
 
-      /* selected ring */
       if (isSel) {
         ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2);
         ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.stroke();
@@ -245,43 +294,30 @@ export default function GlobeMap({
 
     /* ⑪ labels */
     const zoom = S.zoomFactor;
-    const minDeg =
-      zoom > 4.5 ? 0  :
-      zoom > 3.5 ? 8  :
-      zoom > 2.5 ? 20 :
-      zoom > 1.8 ? 38 :
-      zoom > 1.4 ? 60 :
-      zoom > 1.15 ? 78 : 92;
-
+    const minDeg = zoom > 4.5 ? 0 : zoom > 3.5 ? 8 : zoom > 2.5 ? 20
+      : zoom > 1.8 ? 38 : zoom > 1.4 ? 60 : zoom > 1.15 ? 78 : 92;
     const fSize = Math.max(9, Math.min(13, 9 + (zoom - 1) * 2));
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
 
     for (const { airport, x, y, r, deg } of newHits) {
       if (deg < minDeg) continue;
       const isHub = deg > 55;
       const label = zoom > 2 ? airport.city : airport.code;
       ctx.font = `${isHub ? 700 : 600} ${fSize}px 'Sora',system-ui,sans-serif`;
-      const lx = x + r + 5, ly = y;
-      /* outline */
       ctx.lineWidth = 3; ctx.lineJoin = 'round';
-      ctx.strokeStyle = 'rgba(3,8,20,0.92)';
-      ctx.strokeText(label, lx, ly);
-      /* fill */
-      ctx.fillStyle = isHub ? '#fbbf24' : 'rgba(200,228,255,0.9)';
-      ctx.fillText(label, lx, ly);
+      ctx.strokeStyle = 'rgba(3,8,20,0.92)'; ctx.strokeText(label, x + r + 5, y);
+      ctx.fillStyle = isHub ? '#fbbf24' : 'rgba(200,228,255,0.9)'; ctx.fillText(label, x + r + 5, y);
     }
   };
 
   /* ── animation loop ─────────────────────────────────────── */
   useEffect(() => {
-    /* one-time stars */
     S.stars = Array.from({ length: 260 }, () => {
       const rnd = Math.random();
       return {
         x: Math.random(), y: Math.random(),
         r: rnd * rnd * 1.6 + 0.2,
-        c: `rgba(${200 + Math.floor(Math.random() * 55)},${215 + Math.floor(Math.random() * 40)},255,${(Math.random() * 0.5 + 0.08).toFixed(2)})`,
+        c: `rgba(${200 + Math.floor(Math.random()*55)},${215 + Math.floor(Math.random()*40)},255,${(Math.random()*0.5+0.08).toFixed(2)})`,
       };
     });
 
@@ -295,7 +331,7 @@ export default function GlobeMap({
     return () => cancelAnimationFrame(S.animId);
   }, []); // eslint-disable-line
 
-  /* ── world atlas ────────────────────────────────────────── */
+  /* ── atlas fetch ────────────────────────────────────────── */
   useEffect(() => {
     const BASE = 'https://cdn.jsdelivr.net/npm/world-atlas@2/';
     fetch(BASE + 'countries-110m.json').then(r => r.json())
@@ -307,7 +343,8 @@ export default function GlobeMap({
   /* ── interaction ────────────────────────────────────────── */
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const wrap   = wrapRef.current;
+    if (!canvas || !wrap) return;
 
     const resetIdle = () => {
       clearTimeout(S.idleTimer);
@@ -323,108 +360,146 @@ export default function GlobeMap({
       return best;
     };
 
-    /* ─── MOUSE DOWN (canvas) ─── */
+    /* Returns projection matching current canvas/zoom state */
+    const currentProj = () => {
+      const W = wrap.clientWidth, H = wrap.clientHeight;
+      const R = Math.min(W, H) * 0.44 * S.zoomFactor;
+      return makeProj(W, H, R, S.rotation);
+    };
+
+    /* ── MOUSE DOWN on canvas ────────────────────────────── */
     const onMouseDown = (e) => {
       if (e.button !== 0) return;
       e.preventDefault();
+
       const rect = canvas.getBoundingClientRect();
-      S.dragging    = true;
-      S.autoRotate  = false;
-      S.mouseDownPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      S.lastDragPos  = { x: e.clientX, y: e.clientY };
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      /* Snapshot rotation + derive versor state */
+      S.r0  = [...S.rotation];
+      S.q0  = vFromAngles(S.r0);
+      const W = wrap.clientWidth, H = wrap.clientHeight;
+      const R = Math.min(W, H) * 0.44 * S.zoomFactor;
+      const startProj = makeProj(W, H, R, S.r0);
+      const geo = startProj.invert([x, y]);
+      S.v0  = geo ? geoToCart(geo) : null;
+
+      S.dragging     = true;
+      S.autoRotate   = false;
+      S.mouseDownXY  = { x, y };
       canvas.style.cursor = 'grabbing';
       clearTimeout(S.idleTimer);
     };
 
-    /* ─── MOUSE MOVE (window) — captures fast trackpad drags ─── */
+    /* ── MOUSE MOVE on window (never loses capture) ──────── */
     const onMouseMove = (e) => {
       if (S.dragging) {
-        const dx = e.clientX - S.lastDragPos.x;
-        const dy = e.clientY - S.lastDragPos.y;
-        const sens = 0.25 / Math.sqrt(S.zoomFactor);
-        S.rotation = [
-          S.rotation[0] + dx * sens,
-          Math.max(-85, Math.min(85, S.rotation[1] - dy * sens)),
-          S.rotation[2],
-        ];
-        S.lastDragPos = { x: e.clientX, y: e.clientY };
+        const rect   = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (S.v0 && S.q0 && S.r0) {
+          /* Versor drag — correct 3-D rotation, no gimbal twist */
+          const W = wrap.clientWidth, H = wrap.clientHeight;
+          const R = Math.min(W, H) * 0.44 * S.zoomFactor;
+          /* use drag-start rotation to re-project current mouse pos */
+          const tempProj = makeProj(W, H, R, S.r0);
+          const geo = tempProj.invert([x, y]);
+          if (geo) {
+            const v1 = geoToCart(geo);
+            const q1 = vMul(vDelta(S.v0, v1), S.q0);
+            const angles = vToAngles(q1);
+            S.rotation = [angles[0], Math.max(-85, Math.min(85, angles[1])), angles[2]];
+          }
+        }
+
         setTooltip(null);
       } else {
-        /* hover — only when not dragging */
+        /* hover — only inside canvas */
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        /* only update if pointer is inside canvas */
-        if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
-          const hit = hitTest(x, y);
-          if (hit) {
-            canvas.style.cursor = 'pointer';
-            setTooltip({ x: hit.x, y: hit.y, airport: hit.airport, degree: hit.deg });
-          } else {
-            canvas.style.cursor = S.dragging ? 'grabbing' : 'grab';
-            setTooltip(null);
-          }
+        if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+
+        const hit = hitTest(x, y);
+        if (hit) {
+          canvas.style.cursor = 'pointer';
+          setTooltip({ x: hit.x, y: hit.y, airport: hit.airport, degree: hit.deg });
+        } else {
+          canvas.style.cursor = 'grab';
+          setTooltip(null);
         }
       }
     };
 
-    /* ─── MOUSE UP (window) ─── */
+    /* ── MOUSE UP on window ──────────────────────────────── */
     const onMouseUp = (e) => {
       if (!S.dragging) return;
       S.dragging = false;
       canvas.style.cursor = 'grab';
-      /* click if barely moved */
+
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const moved = Math.hypot(x - S.mouseDownPos.x, y - S.mouseDownPos.y);
+      const moved = S.mouseDownXY ? Math.hypot(x - S.mouseDownXY.x, y - S.mouseDownXY.y) : 99;
       if (moved < 6) {
-        const hit = hitTest(S.mouseDownPos.x, S.mouseDownPos.y);
+        const hit = hitTest(S.mouseDownXY.x, S.mouseDownXY.y);
         if (hit) { S.onAirportClick?.(hit.airport); setTooltip(null); }
       }
       resetIdle();
     };
 
-    /* ─── WHEEL  ─────────────────────────────────────────────
-       Trackpad two-finger scroll → rotate (no ctrlKey)
-       Pinch / ctrl+scroll / mouse wheel → zoom               */
+    /* ── WHEEL ───────────────────────────────────────────────
+       ctrlKey → pinch-to-zoom (Mac trackpad pinch)
+       else    → two-finger scroll → rotate/pan             */
     const onWheel = (e) => {
       e.preventDefault();
       S.autoRotate = false;
 
       if (e.ctrlKey) {
-        /* pinch-to-zoom — Mac trackpad pinch fires as ctrlKey+wheel */
+        /* Mac pinch-to-zoom fires as ctrlKey+wheel */
         const factor = e.deltaY < 0 ? 1.06 : 0.945;
         S.targetZoom = Math.max(0.45, Math.min(9, S.targetZoom * factor));
-      } else if (e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || Math.abs(e.deltaY) > 0.5)) {
-        /* trackpad two-finger pan → rotate */
+      } else if (e.deltaMode === 0) {
+        /* Pixel-mode (trackpad two-finger) → pan/rotate the globe.
+           Use simple delta here — each tick is tiny so no gimbal issue. */
         const sens = 0.18 / Math.sqrt(S.zoomFactor);
-        S.rotation = [
+        const newRotation = [
           S.rotation[0] + e.deltaX * sens,
           Math.max(-85, Math.min(85, S.rotation[1] + e.deltaY * sens)),
           S.rotation[2],
         ];
+        S.rotation = newRotation;
       } else {
-        /* mouse scroll wheel → zoom */
-        const factor = e.deltaY < 0 ? 1.10 : 0.91;
+        /* Line/page mode → discrete mouse wheel → zoom */
+        const factor = e.deltaY < 0 ? 1.12 : 0.90;
         S.targetZoom = Math.max(0.45, Math.min(9, S.targetZoom * factor));
       }
       resetIdle();
     };
 
-    /* ─── TOUCH (pinch + single-finger drag) ─── */
+    /* ── TOUCH ───────────────────────────────────────────── */
     const onTouchStart = (e) => {
       if (e.touches.length === 2) {
         e.preventDefault();
         S.pinchDist  = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         S.pinchStart = S.targetZoom;
         S.dragging   = false;
-      } else {
+      } else if (e.touches.length === 1) {
         const rect = canvas.getBoundingClientRect();
-        S.dragging     = true;
-        S.autoRotate   = false;
-        S.mouseDownPos = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-        S.lastDragPos  = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        const x = e.touches[0].clientX - rect.left;
+        const y = e.touches[0].clientY - rect.top;
+        S.r0  = [...S.rotation];
+        S.q0  = vFromAngles(S.r0);
+        const W = wrap.clientWidth, H = wrap.clientHeight;
+        const R = Math.min(W, H) * 0.44 * S.zoomFactor;
+        const geo = makeProj(W, H, R, S.r0).invert([x, y]);
+        S.v0  = geo ? geoToCart(geo) : null;
+        S.dragging    = true;
+        S.autoRotate  = false;
+        S.mouseDownXY = { x, y };
+        clearTimeout(S.idleTimer);
       }
     };
 
@@ -433,16 +508,20 @@ export default function GlobeMap({
         e.preventDefault();
         const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         S.targetZoom = Math.max(0.45, Math.min(9, S.pinchStart * (d / S.pinchDist)));
-      } else if (S.dragging && e.touches.length === 1) {
-        const dx = e.touches[0].clientX - S.lastDragPos.x;
-        const dy = e.touches[0].clientY - S.lastDragPos.y;
-        const sens = 0.25 / Math.sqrt(S.zoomFactor);
-        S.rotation = [
-          S.rotation[0] + dx * sens,
-          Math.max(-85, Math.min(85, S.rotation[1] - dy * sens)),
-          S.rotation[2],
-        ];
-        S.lastDragPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (S.dragging && e.touches.length === 1 && S.v0 && S.q0 && S.r0) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        const y = e.touches[0].clientY - rect.top;
+        const W = wrap.clientWidth, H = wrap.clientHeight;
+        const R = Math.min(W, H) * 0.44 * S.zoomFactor;
+        const geo = makeProj(W, H, R, S.r0).invert([x, y]);
+        if (geo) {
+          const v1 = geoToCart(geo);
+          const q1 = vMul(vDelta(S.v0, v1), S.q0);
+          const angles = vToAngles(q1);
+          S.rotation = [angles[0], Math.max(-85, Math.min(85, angles[1])), angles[2]];
+        }
       }
     };
 
@@ -451,25 +530,25 @@ export default function GlobeMap({
       if (S.dragging) {
         S.dragging = false;
         const rect = canvas.getBoundingClientRect();
-        const touch = e.changedTouches[0];
-        const x = touch.clientX - rect.left, y = touch.clientY - rect.top;
-        const moved = Math.hypot(x - S.mouseDownPos.x, y - S.mouseDownPos.y);
+        const t = e.changedTouches[0];
+        const x = t.clientX - rect.left, y = t.clientY - rect.top;
+        const moved = S.mouseDownXY ? Math.hypot(x - S.mouseDownXY.x, y - S.mouseDownXY.y) : 99;
         if (moved < 8) {
-          const hit = hitTest(x, y);
+          const hit = hitTest(S.mouseDownXY.x, S.mouseDownXY.y);
           if (hit) S.onAirportClick?.(hit.airport);
         }
         resetIdle();
       }
     };
 
-    /* canvas-level listeners */
+    /* canvas-level */
     canvas.addEventListener('mousedown',  onMouseDown);
     canvas.addEventListener('wheel',      onWheel,      { passive: false });
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
     canvas.addEventListener('touchmove',  onTouchMove,  { passive: false });
     canvas.addEventListener('touchend',   onTouchEnd);
 
-    /* window-level listeners (capture drag even outside canvas) */
+    /* window-level — captures pointer outside canvas during drag */
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup',   onMouseUp);
 
