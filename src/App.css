@@ -2071,15 +2071,22 @@ select option {
   pointer-events: none;
   animation: fadeIn 1s ease 2.5s both;
   white-space: nowrap;
+  background: rgba(4, 9, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 0.4rem 0.875rem;
+  border-radius: 20px;
 }
 
 .globe-hint-sep {
   display: inline-block;
-  width: 3px;
-  height: 3px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
   background: var(--text-muted);
-  opacity: 0.5;
+  opacity: 0.45;
+  margin: 0 0.125rem;
 }
 
 /* ── AIRLINE BADGE (redesigned) ──────────────────────────── */
