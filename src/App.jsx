@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import GlobeMap from './components/GlobeMap';
 import HiddenCityHunt from './components/HiddenCityHunt';
 import StatsPanel from './components/StatsPanel';
@@ -49,9 +49,12 @@ function App() {
   const [airportConnections, setAirportConnections] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isResearchMode, setIsResearchMode] = useState(false);
+  const isResearchModeRef = useRef(false);
   const [currentDeal, setCurrentDeal]       = useState(null);
   const [airportDeals, setAirportDeals]     = useState(null);
   const [dealsLoading, setDealsLoading]     = useState(false);
+
+  useEffect(() => { isResearchModeRef.current = isResearchMode; }, [isResearchMode]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -214,7 +217,7 @@ const handleDisruptHub = (hubCode) => {
     setSelectedRoute(null);
     setCurrentDeal(null);
 
-    if (isResearchMode && airport) {
+    if (isResearchModeRef.current && airport) {
       setDealsLoading(true);
       setAirportDeals(null);
       fetch(`/api/hunt/anomalies?origin=${airport.code}`)
@@ -265,16 +268,25 @@ const handleDisruptHub = (hubCode) => {
           <button
             className={isResearchMode ? 'icon-btn active research-mode-btn' : 'icon-btn research-mode-btn'}
             onClick={() => {
-              setIsResearchMode(r => !r);
+              const next = !isResearchMode;
+              setIsResearchMode(next);
+              isResearchModeRef.current = next;
               setCurrentDeal(null);
               setAirportDeals(null);
             }}
             title="Toggle Research Mode — auto-scan hidden city deals on airport click"
           >
-            Research
+            {isResearchMode ? 'Research: ON' : 'Research'}
           </button>
         </div>
       </header>
+
+      {isResearchMode && (
+        <div className="research-banner">
+          <span className="research-banner-dot" />
+          Research Mode Active — click any airport on the globe to scan for hidden city deals
+        </div>
+      )}
 
       <div className="app-layout-new">
         <div className="map-container-large">

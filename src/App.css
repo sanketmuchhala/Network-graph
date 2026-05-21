@@ -2382,11 +2382,48 @@ select option {
   line-height: 1;
 }
 
+/* ── RESEARCH MODE BANNER ────────────────────────────────── */
+.research-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 1.5rem;
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+  font-size: 0.6875rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.06em;
+  color: #fca5a5;
+  flex-shrink: 0;
+  z-index: 499;
+}
+
+.research-banner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  animation: pulse-red 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+}
+
 /* ── RESEARCH MODE BUTTON ────────────────────────────────── */
-.research-mode-btn.active {
+.icon-btn.active.research-mode-btn {
   background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.45);
+  border-color: rgba(239, 68, 68, 0.50);
   color: #f87171;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.20);
+}
+
+.icon-btn.active.research-mode-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.70);
+  color: #fca5a5;
 }
 
 /* ── RESEARCH DEALS SECTION (airport sidebar) ────────────── */
