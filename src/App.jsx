@@ -2,14 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import GlobeMap from './components/GlobeMap';
 import HiddenCityHunt from './components/HiddenCityHunt';
 import StatsPanel from './components/StatsPanel';
-import PathFinder from './components/PathFinder';
 import HubDisruptor from './components/HubDisruptor';
 import InfoModal from './components/InfoModal';
 import AIInsights from './components/AIInsights';
 import { generateNetworkData } from './utils/dataGenerator';
 import {
   buildGraph,
-  findShortestPath,
   calculateAllPairsShortestPaths,
   calculateAverageDegreesOfSeparation,
   calculatePathLengthDistribution,
@@ -150,15 +148,7 @@ function App() {
     setAirportConnections(null);
   };
 
-  const handleFindPath = (sourceCode, targetCode) => {
-    if (!graphMetrics) return;
-    const path = findShortestPath(graphMetrics.graph, sourceCode, targetCode);
-    setCurrentPath(path);
-    setSelectedAirport(null);
-    setAirportConnections(null);
-  };
-
-  const handleDisruptHub = (hubCode) => {
+const handleDisruptHub = (hubCode) => {
     if (!graphMetrics || !hubCode) {
       setRemovedHub(null);
       setDisruptionResult(null);
@@ -275,12 +265,6 @@ function App() {
         </div>
 
         <div className="controls-sidebar">
-          <PathFinder
-            airports={networkData.airports}
-            onFindPath={handleFindPath}
-            currentPath={currentPath}
-          />
-
           <HubDisruptor
             topHubs={graphMetrics.topHubs}
             airports={networkData.airports}

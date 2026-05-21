@@ -96,8 +96,8 @@ export default function GlobeMap({
 
   const S = useRef({
     rotation:   [96, -38, 0],
-    zoomFactor: 1.0,
-    targetZoom: 1.0,
+    zoomFactor: 1.35,
+    targetZoom: 1.35,
     /* drag state — versor-based */
     dragging:     false,
     mouseDownXY:  null,   // {x,y} canvas-relative
@@ -381,8 +381,13 @@ export default function GlobeMap({
       S.q0  = vFromAngles(S.r0);
       const W = wrap.clientWidth, H = wrap.clientHeight;
       const R = Math.min(W, H) * 0.44 * S.zoomFactor;
-      const startProj = makeProj(W, H, R, S.r0);
-      const geo = startProj.invert([x, y]);
+      /* clamp to sphere so invert never returns null */
+      const cx0 = W / 2, cy0 = H / 2;
+      const ddx0 = x - cx0, ddy0 = y - cy0;
+      const d0 = Math.sqrt(ddx0 * ddx0 + ddy0 * ddy0);
+      const sx0 = d0 > R - 1 ? cx0 + ddx0 * (R - 1) / d0 : x;
+      const sy0 = d0 > R - 1 ? cy0 + ddy0 * (R - 1) / d0 : y;
+      const geo = makeProj(W, H, R, S.r0).invert([sx0, sy0]);
       S.v0  = geo ? geoToCart(geo) : null;
 
       S.dragging     = true;
@@ -400,12 +405,19 @@ export default function GlobeMap({
         const y = e.clientY - rect.top;
 
         if (S.v0 && S.q0 && S.r0) {
-          /* Versor drag — correct 3-D rotation, no gimbal twist */
+          /* Versor drag — the geo point grabbed at mousedown follows the cursor exactly.
+             Clamp (x,y) to the sphere boundary so invert() never returns null
+             even when the cursor drifts outside the globe edge mid-drag. */
           const W = wrap.clientWidth, H = wrap.clientHeight;
           const R = Math.min(W, H) * 0.44 * S.zoomFactor;
-          /* use drag-start rotation to re-project current mouse pos */
-          const tempProj = makeProj(W, H, R, S.r0);
-          const geo = tempProj.invert([x, y]);
+          const cx = W / 2, cy = H / 2;
+          const ddx = x - cx, ddy = y - cy;
+          const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+          /* project onto sphere surface if outside */
+          const sx = dist > R - 1 ? cx + ddx * (R - 1) / dist : x;
+          const sy = dist > R - 1 ? cy + ddy * (R - 1) / dist : y;
+
+          const geo = makeProj(W, H, R, S.r0).invert([sx, sy]);
           if (geo) {
             const v1 = geoToCart(geo);
             const q1 = vMul(vDelta(S.v0, v1), S.q0);
@@ -494,7 +506,12 @@ export default function GlobeMap({
         S.q0  = vFromAngles(S.r0);
         const W = wrap.clientWidth, H = wrap.clientHeight;
         const R = Math.min(W, H) * 0.44 * S.zoomFactor;
-        const geo = makeProj(W, H, R, S.r0).invert([x, y]);
+        const cxt = W / 2, cyt = H / 2;
+        const ddxt = x - cxt, ddyt = y - cyt;
+        const dt = Math.sqrt(ddxt * ddxt + ddyt * ddyt);
+        const sxt = dt > R - 1 ? cxt + ddxt * (R - 1) / dt : x;
+        const syt = dt > R - 1 ? cyt + ddyt * (R - 1) / dt : y;
+        const geo = makeProj(W, H, R, S.r0).invert([sxt, syt]);
         S.v0  = geo ? geoToCart(geo) : null;
         S.dragging    = true;
         S.autoRotate  = false;
@@ -515,7 +532,12 @@ export default function GlobeMap({
         const y = e.touches[0].clientY - rect.top;
         const W = wrap.clientWidth, H = wrap.clientHeight;
         const R = Math.min(W, H) * 0.44 * S.zoomFactor;
-        const geo = makeProj(W, H, R, S.r0).invert([x, y]);
+        const cx = W / 2, cy = H / 2;
+        const ddx = x - cx, ddy = y - cy;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        const sx = dist > R - 1 ? cx + ddx * (R - 1) / dist : x;
+        const sy = dist > R - 1 ? cy + ddy * (R - 1) / dist : y;
+        const geo = makeProj(W, H, R, S.r0).invert([sx, sy]);
         if (geo) {
           const v1 = geoToCart(geo);
           const q1 = vMul(vDelta(S.v0, v1), S.q0);
