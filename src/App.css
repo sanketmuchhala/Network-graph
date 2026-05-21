@@ -2000,6 +2000,252 @@ select option {
   transition: all 0.15s ease;
 }
 
+/* ── HIDDEN CITY HUNT PANEL ──────────────────────────────── */
+.hidden-city-hunt {
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  border-left: 2px solid rgba(251, 191, 36, 0.35);
+}
+
+.hidden-city-hunt h3 {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 0.625rem;
+}
+
+.hunt-description {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.hunt-description em {
+  color: var(--amber-light);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.hunt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.hunt-date-input {
+  color-scheme: dark;
+}
+
+.hunt-btn {
+  margin-top: 0.375rem;
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+.hunt-btn:hover:not(:disabled) {
+  background: var(--amber);
+  color: var(--bg-void);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+}
+
+.hunt-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hunt-error {
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--crimson-dim);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 5px;
+  font-size: 0.775rem;
+  color: var(--crimson);
+  line-height: 1.4;
+}
+
+.hunt-loading {
+  margin-top: 0.875rem;
+  text-align: center;
+}
+
+.hunt-loading p {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.hunt-loading-bar {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), var(--cyan), transparent);
+  border-radius: 1px;
+  animation: loading-sweep 1.6s ease-in-out infinite;
+}
+
+/* ── Hunt results ───────────────────────── */
+.hunt-results {
+  margin-top: 0.875rem;
+}
+
+.hunt-baseline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.hunt-baseline-label {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.hunt-baseline-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hunt-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-raised);
+  border-radius: 5px;
+  line-height: 1.45;
+}
+
+.hunt-deals-header {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--emerald);
+  margin-bottom: 0.5rem;
+}
+
+.hunt-deals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hunt-deal-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-base);
+  border-radius: 7px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.hunt-deal-card:hover {
+  border-color: var(--amber-border);
+  background: var(--amber-dim);
+  transform: translateX(2px);
+}
+
+.hunt-deal-card.selected {
+  border-color: var(--amber);
+  background: var(--amber-dim);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.12);
+}
+
+.deal-route {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.375rem;
+}
+
+.deal-origin,
+.deal-through {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--cyan);
+}
+
+.deal-arrow {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.deal-exit-label {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 3px;
+  padding: 0.125rem 0.375rem;
+}
+
+.deal-meta {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.deal-pricing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.deal-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--emerald);
+}
+
+.deal-savings-badge {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--emerald);
+  background: var(--emerald-dim);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 3px;
+  padding: 0.1875rem 0.5rem;
+}
+
+.hunt-no-deals {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 0.75rem;
+  background: var(--bg-raised);
+  border-radius: 5px;
+  text-align: center;
+}
+
+.hunt-disclaimer {
+  margin-top: 0.875rem;
+  font-size: 0.5625rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  font-style: italic;
+  text-align: center;
+  opacity: 0.7;
+}
+
 /* ── ANIMATION UTILITIES ─────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }

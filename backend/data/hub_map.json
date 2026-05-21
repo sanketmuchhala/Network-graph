@@ -1,0 +1,77 @@
+{
+  "UA": {
+    "name": "United Airlines",
+    "hubs": ["ORD", "DEN", "IAH", "SFO", "EWR"],
+    "beyond": {
+      "ORD": ["MSP", "DTW", "STL", "MCI", "MKE", "DSM", "OMA", "RSW", "TPA"],
+      "DEN": ["LAS", "LAX", "SFO", "SEA", "PDX", "SAN", "SMF", "SJC", "RNO", "BOI"],
+      "IAH": ["MSY", "SAT", "AUS", "OKC", "TUL", "LIT", "ELP", "ABQ", "LAS"],
+      "SFO": ["HNL", "LAX", "SAN", "SJC", "SMF", "PDX", "SEA", "LAS", "RNO"],
+      "EWR": ["BOS", "DCA", "PHL", "BWI", "RIC", "CLT", "RDU", "JAX", "MCO"]
+    }
+  },
+  "AA": {
+    "name": "American Airlines",
+    "hubs": ["DFW", "CLT", "MIA", "PHX", "ORD", "PHL"],
+    "beyond": {
+      "DFW": ["AUS", "SAT", "OKC", "TUL", "ABQ", "ELP", "LAS", "LAX", "SAN"],
+      "CLT": ["RDU", "RIC", "PIT", "BUF", "SYR", "ALB", "ROC", "BDL", "BNA"],
+      "MIA": ["TPA", "RSW", "PBI", "MCO", "FLL", "SJU", "MSY", "JAX"],
+      "PHX": ["LAS", "SAN", "LAX", "SFO", "SJC", "SMF", "TUS", "ABQ", "ELP"],
+      "ORD": ["DTW", "MSP", "STL", "MCI", "IND", "CMH", "CLE", "MKE"],
+      "PHL": ["BOS", "DCA", "BWI", "BUF", "SYR", "ROC", "ALB", "BDL"]
+    }
+  },
+  "DL": {
+    "name": "Delta Air Lines",
+    "hubs": ["ATL", "DTW", "MSP", "SLC", "JFK", "BOS", "LGA"],
+    "beyond": {
+      "ATL": ["TPA", "MCO", "RSW", "JAX", "BNA", "BHM", "MSY", "CLT", "RDU"],
+      "DTW": ["CLE", "PIT", "CMH", "IND", "MKE", "STL", "MCI", "GRR"],
+      "MSP": ["DSM", "OMA", "MCI", "STL", "MKE", "GRR", "FSD", "FAR"],
+      "SLC": ["BOI", "RNO", "LAS", "LAX", "SAN", "PHX", "ABQ", "SMF", "SEA"],
+      "JFK": ["BOS", "PHL", "DCA", "BWI", "RDU", "CLT", "RIC", "SJU"],
+      "BOS": ["BDL", "PVD", "MHT", "BUF", "ALB", "SYR", "ROC"],
+      "LGA": ["BOS", "DCA", "PHL", "BWI", "RDU", "CLT", "PIT"]
+    }
+  },
+  "WN": {
+    "name": "Southwest Airlines",
+    "hubs": ["DAL", "MDW", "BWI", "LAS", "PHX", "HOU"],
+    "beyond": {
+      "DAL": ["AUS", "SAT", "HOU", "OKC", "TUL", "LIT", "MSY"],
+      "MDW": ["STL", "MCI", "DSM", "OMA", "MKE", "IND", "CMH"],
+      "BWI": ["PHL", "DCA", "BOS", "PVD", "RDU", "CLT", "RIC"],
+      "LAS": ["LAX", "SAN", "SFO", "SJC", "SMF", "RNO", "PHX", "ABQ"],
+      "PHX": ["LAS", "SAN", "LAX", "SFO", "TUS", "ABQ", "ELP"],
+      "HOU": ["AUS", "SAT", "MSY", "OKC", "DAL", "LIT"]
+    }
+  },
+  "AS": {
+    "name": "Alaska Airlines",
+    "hubs": ["SEA", "PDX", "ANC"],
+    "beyond": {
+      "SEA": ["PDX", "SFO", "LAX", "SAN", "SJC", "SMF", "RNO", "BOI", "GEG"],
+      "PDX": ["SEA", "SFO", "LAX", "SAN", "RNO", "BOI"],
+      "ANC": ["FAI", "JNU", "KTN", "SIT", "CDV", "OME"]
+    }
+  },
+  "B6": {
+    "name": "JetBlue Airways",
+    "hubs": ["JFK", "BOS", "FLL", "LGB"],
+    "beyond": {
+      "JFK": ["BOS", "DCA", "BWI", "PHL", "RDU", "CLT", "SJU", "MCO"],
+      "BOS": ["JFK", "LGA", "DCA", "PHL", "BDL", "PVD"],
+      "FLL": ["MCO", "TPA", "PBI", "RSW", "JAX", "SJU", "MBJ"],
+      "LGB": ["LAX", "SFO", "SJC", "SAN", "LAS", "PHX"]
+    }
+  },
+  "F9": {
+    "name": "Frontier Airlines",
+    "hubs": ["DEN", "LAS"],
+    "beyond": {
+      "DEN": ["LAS", "LAX", "SFO", "SEA", "PDX", "SAN", "SMF", "RNO", "BOI", "PHX"],
+      "LAS": ["LAX", "SFO", "SAN", "PDX", "SEA", "SMF", "PHX"]
+    }
+  }
+}

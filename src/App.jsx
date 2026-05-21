@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import GlobeMap from './components/GlobeMap';
+import HiddenCityHunt from './components/HiddenCityHunt';
 import StatsPanel from './components/StatsPanel';
 import PathFinder from './components/PathFinder';
 import HubDisruptor from './components/HubDisruptor';
@@ -303,6 +304,15 @@ function App() {
             betweenness={graphMetrics.betweenness}
             degreeCentrality={graphMetrics.degreeCentrality}
             onShowInfo={handleShowInfo}
+          />
+
+          <HiddenCityHunt
+            airports={networkData.airports}
+            onDealSelect={({ path }) => {
+              setCurrentPath(path);
+              setSelectedAirport(null);
+              setAirportConnections(null);
+            }}
           />
         </div>
       </div>
