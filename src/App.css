@@ -5,57 +5,57 @@
    US Airport Network Visualization
    ═══════════════════════════════════════════════════════════ */
 
-/* ── VARIABLES ───────────────────────────────────────────── */
+/* ── VARIABLES — War-Watch Military Ops Palette ──────────── */
 :root {
-  /* Core backgrounds — deepest to most elevated */
-  --bg-void:    #04060f;
-  --bg-base:    #070b18;
-  --bg-surface: #0b1020;
-  --bg-raised:  #0f1728;
-  --bg-card:    #131e32;
+  /* Core backgrounds — near-black military ops */
+  --bg-void:    #020508;
+  --bg-base:    #04080f;
+  --bg-surface: #070d18;
+  --bg-raised:  #0a1220;
+  --bg-card:    #0d1628;
 
-  /* Compatibility aliases for existing component classes */
+  /* Compatibility aliases */
   --bg-primary:   var(--bg-base);
   --bg-secondary: var(--bg-surface);
   --bg-elevated:  var(--bg-raised);
 
-  /* Accent — Amber (primary, aviation instrument gold) */
+  /* Amber — warnings, hub selection */
   --amber:        #f59e0b;
   --amber-light:  #fbbf24;
   --amber-dim:    rgba(245, 158, 11, 0.10);
   --amber-border: rgba(245, 158, 11, 0.28);
 
-  /* Accent — Cyan (data highlight, radar screens) */
-  --cyan:        #22d3ee;
-  --cyan-light:  #67e8f9;
-  --cyan-dim:    rgba(34, 211, 238, 0.08);
-  --cyan-border: rgba(34, 211, 238, 0.22);
+  /* Radar green — primary accent (replaces cyan, matches war-watch) */
+  --cyan:        #22c55e;
+  --cyan-light:  #4ade80;
+  --cyan-dim:    rgba(34, 197, 94, 0.08);
+  --cyan-border: rgba(34, 197, 94, 0.20);
 
-  /* Accent — Crimson (alerts, disruptions) */
-  --crimson:     #f43f5e;
-  --crimson-dim: rgba(244, 63, 94, 0.10);
+  /* Crimson — disruptions, alerts */
+  --crimson:     #ef4444;
+  --crimson-dim: rgba(239, 68, 68, 0.10);
 
-  /* Accent — Emerald (paths, success) */
-  --emerald:     #10b981;
-  --emerald-dim: rgba(16, 185, 129, 0.10);
+  /* Emerald — path highlight */
+  --emerald:     #22c55e;
+  --emerald-dim: rgba(34, 197, 94, 0.10);
 
-  /* Accent — Violet (AI insights) */
+  /* Violet — AI insights */
   --violet:     #a78bfa;
   --violet-dim: rgba(167, 139, 250, 0.10);
 
-  /* Legacy accent alias */
+  /* Legacy alias */
   --accent:       var(--cyan);
   --accent-hover: var(--cyan-light);
 
-  /* Text hierarchy */
-  --text-primary:   #dde6f6;
-  --text-secondary: #7a90b8;
-  --text-muted:     #3d506e;
+  /* Text — slight military green tint */
+  --text-primary:   #d8ead8;
+  --text-secondary: #5a7a62;
+  --text-muted:     #2a3d2e;
 
-  /* Borders */
-  --border-color:  rgba(255, 255, 255, 0.07);
-  --border-base:   rgba(255, 255, 255, 0.07);
-  --border-subtle: rgba(255, 255, 255, 0.04);
+  /* Borders — faint green tint, matches war-watch panels */
+  --border-color:  rgba(34, 197, 94, 0.10);
+  --border-base:   rgba(34, 197, 94, 0.10);
+  --border-subtle: rgba(34, 197, 94, 0.05);
 
   /* Map */
   --map-bg: var(--bg-base);
@@ -102,7 +102,7 @@ body {
   flex-shrink: 0;
 }
 
-/* Gradient line beneath header */
+/* Gradient line beneath header — green ops bar */
 .app-header::after {
   content: '';
   position: absolute;
@@ -110,8 +110,8 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--amber) 30%, var(--cyan) 70%, transparent 100%);
-  opacity: 0.45;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 30%, var(--amber) 70%, transparent 100%);
+  opacity: 0.5;
   pointer-events: none;
 }
 
@@ -191,7 +191,7 @@ body {
   z-index: 0;
 }
 
-/* ── SIDEBAR — floating glass panel ─────────────────────── */
+/* ── SIDEBAR — floating military glass panel ─────────────── */
 .controls-sidebar {
   position: absolute;
   right: 0;
@@ -200,10 +200,10 @@ body {
   width: 348px;
   overflow-y: auto;
   overflow-x: hidden;
-  background: rgba(7, 11, 24, 0.88);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(4, 8, 15, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(34, 197, 94, 0.12);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -1019,10 +1019,10 @@ select option {
   top: 52px;
   width: 380px;
   height: calc(100vh - 52px);
-  background: rgba(7, 11, 24, 0.94);
+  background: rgba(3, 7, 14, 0.96);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(34, 197, 94, 0.14);
   display: flex;
   flex-direction: column;
   box-shadow: -16px 0 60px rgba(0, 0, 0, 0.8);
@@ -2254,11 +2254,11 @@ select option {
 
 /* ── GLOBE TOOLTIP ───────────────────────────────────────── */
 .globe-tooltip {
-  background: var(--bg-raised);
-  border: 1px solid var(--cyan-border);
-  border-radius: 8px;
+  background: rgba(4, 9, 18, 0.96);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 7px;
   padding: 10px 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.75), 0 0 20px rgba(34,211,238,0.06);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.85), 0 0 20px rgba(34,197,94,0.06);
   min-width: 170px;
   animation: fadeIn 0.12s ease;
 }
@@ -2294,9 +2294,10 @@ select option {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 6px var(--cyan);
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
   flex-shrink: 0;
+  animation: status-pulse 1.8s ease-in-out infinite;
 }
 
 /* ── GLOBE HINT ──────────────────────────────────────────── */
