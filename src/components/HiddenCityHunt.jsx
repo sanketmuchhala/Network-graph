@@ -71,6 +71,7 @@ export default function HiddenCityHunt({ airports = [], onDealSelect }) {
       hiddenCity:  deal.hidden_city,
       bookedDest:  deal.booked_dest,
       path:        [deal.origin, deal.hidden_city],
+      deal,
     });
   };
 

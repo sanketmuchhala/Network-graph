@@ -31,6 +31,7 @@ export default function GlobeMap({
   degreeCentrality, showHeatmap,
   onAirportClick, selectedAirport,
   communities, trafficLoad,
+  isResearchMode, currentDeal,
 }) {
   const wrapRef = useRef(null);
 
@@ -125,6 +126,25 @@ export default function GlobeMap({
     const aMap = new Map(airports.map(a => [a.code, a]));
     const out  = [];
 
+    /* Research mode dual-path: solid cyan (real segment) + dashed red (throwaway) */
+    if (currentDeal) {
+      const orig = aMap.get(currentDeal.origin);
+      const hub  = aMap.get(currentDeal.hidden_city);
+      const dest = aMap.get(currentDeal.booked_dest);
+      if (orig && hub) out.push({
+        sLat: orig.lat, sLng: orig.lon,
+        eLat: hub.lat,  eLng: hub.lon,
+        color:    ['rgba(0,229,255,0)', 'rgba(0,229,255,0.95)', 'rgba(0,229,255,0)'],
+        stroke: 2.8, altitude: 0.10, dash: 1, gap: 0, anim: 0,
+      });
+      if (hub && dest) out.push({
+        sLat: hub.lat,  sLng: hub.lon,
+        eLat: dest.lat, eLng: dest.lon,
+        color:    ['rgba(239,68,68,0)', 'rgba(239,68,68,0.80)', 'rgba(239,68,68,0)'],
+        stroke: 1.5, altitude: 0.07, dash: 0.30, gap: 0.18, anim: 2500,
+      });
+    }
+
     /* Highlighted path — animated flowing dash */
     if (highlightedPath?.length > 1) {
       for (let i = 0; i < highlightedPath.length - 1; i++) {
@@ -167,7 +187,7 @@ export default function GlobeMap({
       });
 
     return out;
-  }, [airports, routes, highlightedPath, selectedAirport, removedHub]);
+  }, [airports, routes, highlightedPath, selectedAirport, removedHub, currentDeal]);
 
   /* ── Tooltip position tracking ─────────────────────────── */
   const handleMouseMove = useCallback((e) => {

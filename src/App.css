@@ -2382,6 +2382,137 @@ select option {
   line-height: 1;
 }
 
+/* ── RESEARCH MODE BUTTON ────────────────────────────────── */
+.research-mode-btn.active {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+/* ── RESEARCH DEALS SECTION (airport sidebar) ────────────── */
+.research-deals-section {
+  padding: 0 0 8px;
+}
+
+.deals-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.deals-loading-bar {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.6), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 1px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.deals-empty {
+  font-size: 0.75rem;
+  color: var(--text-muted, #4a5568);
+  padding: 10px 0;
+  line-height: 1.5;
+}
+
+/* ── DEAL CARD ───────────────────────────────────────────── */
+.deal-card {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.deal-card:hover {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.38);
+}
+
+.deal-card-route {
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.deal-hub-code {
+  color: #00e5ff;
+  font-weight: 700;
+}
+
+.deal-arrow-sym {
+  color: var(--text-secondary);
+}
+
+.deal-thru {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.deal-card-math {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deal-savings-badge {
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  color: #fb923c;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+}
+
+.deal-pct-badge {
+  font-size: 0.68rem;
+  color: #f97316;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.deal-card-prices {
+  display: flex;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.deal-baseline-price {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: rgba(239, 68, 68, 0.5);
+}
+
+.deal-hidden-price {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.deal-card-airline {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
 /* ── RESPONSIVE (updated for new sidebar widths) ─────────── */
 @media (max-width: 1100px) {
   .controls-sidebar {

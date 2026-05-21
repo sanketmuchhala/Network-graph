@@ -48,6 +48,10 @@ function App() {
   const [selectedAirport, setSelectedAirport] = useState(null);
   const [airportConnections, setAirportConnections] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [isResearchMode, setIsResearchMode] = useState(false);
+  const [currentDeal, setCurrentDeal]       = useState(null);
+  const [airportDeals, setAirportDeals]     = useState(null);
+  const [dealsLoading, setDealsLoading]     = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -208,6 +212,19 @@ const handleDisruptHub = (hubCode) => {
     setAirportConnections(connectionDetails);
     setCurrentPath(null);
     setSelectedRoute(null);
+    setCurrentDeal(null);
+
+    if (isResearchMode && airport) {
+      setDealsLoading(true);
+      setAirportDeals(null);
+      fetch(`/api/hunt/anomalies?origin=${airport.code}`)
+        .then(r => r.json())
+        .then(data => setAirportDeals(data.deals || []))
+        .catch(() => setAirportDeals([]))
+        .finally(() => setDealsLoading(false));
+    } else {
+      setAirportDeals(null);
+    }
   };
 
   if (isLoading || !networkData || !graphMetrics) {
@@ -245,6 +262,17 @@ const handleDisruptHub = (hubCode) => {
           >
             Heatmap
           </button>
+          <button
+            className={isResearchMode ? 'icon-btn active research-mode-btn' : 'icon-btn research-mode-btn'}
+            onClick={() => {
+              setIsResearchMode(r => !r);
+              setCurrentDeal(null);
+              setAirportDeals(null);
+            }}
+            title="Toggle Research Mode — auto-scan hidden city deals on airport click"
+          >
+            Research
+          </button>
         </div>
       </header>
 
@@ -261,10 +289,23 @@ const handleDisruptHub = (hubCode) => {
             selectedAirport={selectedAirport}
             communities={graphMetrics.communities}
             trafficLoad={graphMetrics.trafficLoad}
+            isResearchMode={isResearchMode}
+            currentDeal={currentDeal}
           />
         </div>
 
         <div className="controls-sidebar">
+          <HiddenCityHunt
+            airports={networkData.airports}
+            onDealSelect={({ path, deal }) => {
+              setCurrentPath(path);
+              setCurrentDeal(deal || null);
+              setSelectedAirport(null);
+              setAirportConnections(null);
+              setAirportDeals(null);
+            }}
+          />
+
           <HubDisruptor
             topHubs={graphMetrics.topHubs}
             airports={networkData.airports}
@@ -288,15 +329,6 @@ const handleDisruptHub = (hubCode) => {
             betweenness={graphMetrics.betweenness}
             degreeCentrality={graphMetrics.degreeCentrality}
             onShowInfo={handleShowInfo}
-          />
-
-          <HiddenCityHunt
-            airports={networkData.airports}
-            onDealSelect={({ path }) => {
-              setCurrentPath(path);
-              setSelectedAirport(null);
-              setAirportConnections(null);
-            }}
           />
         </div>
       </div>
@@ -410,11 +442,63 @@ const handleDisruptHub = (hubCode) => {
               );
             })()}
 
-            <div className="connectivity-score">
-              <div className="score-label">Network Connectivity</div>
-              <div className="score-value">{airportConnections.length}</div>
-              <div className="score-subtitle">Direct Connections</div>
-            </div>
+            {isResearchMode ? (
+              <div className="research-deals-section">
+                <h4 className="stats-section-title">Hidden City Deals</h4>
+                {dealsLoading && (
+                  <div className="deals-loading">
+                    <div className="deals-loading-bar" />
+                    <span>Scanning Amadeus...</span>
+                  </div>
+                )}
+                {!dealsLoading && airportDeals?.length === 0 && (
+                  <div className="deals-empty">
+                    No anomalies found departing {selectedAirport.code} today.
+                  </div>
+                )}
+                {!dealsLoading && airportDeals?.map(d => (
+                  <div
+                    key={d.route_id}
+                    className="deal-card"
+                    onClick={() => {
+                      setCurrentDeal({
+                        origin:      d.origin,
+                        hidden_city: d.target_hub,
+                        booked_dest: d.dummy_destination,
+                        savings:     d.net_savings,
+                        savings_pct: d.savings_pct,
+                        price:       d.hidden_price,
+                        airline:     d.airline,
+                        airline_code: d.airline_code,
+                      });
+                      setCurrentPath([d.origin, d.target_hub]);
+                    }}
+                  >
+                    <div className="deal-card-route">
+                      <span>{d.origin}</span>
+                      <span className="deal-arrow-sym"> → </span>
+                      <span className="deal-hub-code">{d.target_hub}</span>
+                      <span className="deal-thru"> via {d.dummy_destination}</span>
+                    </div>
+                    <div className="deal-card-math">
+                      <span className="deal-savings-badge">${d.net_savings.toFixed(0)} saved</span>
+                      <span className="deal-pct-badge">{d.savings_pct.toFixed(1)}%</span>
+                    </div>
+                    <div className="deal-card-prices">
+                      <span className="deal-baseline-price">Direct: ${d.baseline_price.toFixed(0)}</span>
+                      <span className="deal-hidden-price">Hidden: ${d.hidden_price.toFixed(0)}</span>
+                    </div>
+                    <div className="deal-card-airline">{d.airline}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="connectivity-score">
+                <div className="score-label">Network Connectivity</div>
+                <div className="score-value">{airportConnections.length}</div>
+                <div className="score-subtitle">Direct Connections</div>
+              </div>
+            )}
 
             <div className="connections-list-header">
               <h4>All Connections ({airportConnections.length})</h4>
