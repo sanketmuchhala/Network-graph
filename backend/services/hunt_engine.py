@@ -18,6 +18,14 @@ _HUB_MAP: dict[str, Any] = json.loads(
 )
 
 
+def get_all_hubs() -> list[str]:
+    """Return every unique hub airport code across all airlines in hub_map.json."""
+    seen: set[str] = set()
+    for info in _HUB_MAP.values():
+        seen.update(info.get("hubs", []))
+    return sorted(seen)
+
+
 def _hub_airlines_for(destination: str) -> list[tuple[str, str]]:
     """Return [(airline_code, airline_name)] whose hub list includes destination."""
     return [
